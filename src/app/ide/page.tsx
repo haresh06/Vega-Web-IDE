@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { Plus, X, Edit2, FileCode, FileText, RotateCw } from 'lucide-react';
 import { checkEsp32Status, uploadFirmwareToEsp32 } from '@/lib/esp32/wifi-flasher';
 import { discoverEsp32, checkEsp32Health, DiscoveredEsp32 } from '@/lib/esp32/discovery';
+import VegaLabSetupCard from '@/components/ide/VegaLabSetupCard';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
@@ -453,9 +454,11 @@ export default function IDEPage() {
   };
 
   // --------------------------------------------------------------------------
-  // MULTI-FILE BUILD COMPILATION & LINKING
+  // MULTI-FILE BUILD COMPILATION & LINKING (LOCAL VEGA HELPER)
   // --------------------------------------------------------------------------
   const handleBuild = async () => {
+    const COMPILER_HELPER_URL = 'http://127.0.0.1:4000';
+
     setBuildStatus('building');
     setActivePanel('build');
     setBuildLog([]);
@@ -481,7 +484,51 @@ export default function IDEPage() {
     }
 
     try {
-      // Collect all project files into payload map
+      // Step 1: Health check on local VEGA compiler helper
+      let isHealthy = false;
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+        const healthRes = await fetch(`${COMPILER_HELPER_URL}/health`, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' },
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        if (healthRes.ok) {
+          const healthData = await healthRes.json();
+          if (
+            healthData &&
+            healthData.status === 'ok' &&
+            healthData.compiler === true &&
+            healthData.objcopy === true &&
+            healthData.linker === true &&
+            healthData.core === true
+          ) {
+            isHealthy = true;
+          }
+        }
+      } catch {
+        isHealthy = false;
+      }
+
+      if (!isHealthy) {
+        setBuildStatus('failed');
+        setBinaryBase64(null);
+        addFlashLog('');
+        addFlashLog('❌ BUILD FAILED: VEGA Compiler Helper is not running. Please install or start VEGA Lab Compiler.');
+        addFlashLog('');
+        addFlashLog('   Troubleshooting:');
+        addFlashLog('   1. Download and run VEGA Lab Compiler installer:');
+        addFlashLog('      🔗 Download: /downloads/VEGA-Lab-Setup.exe');
+        addFlashLog('   2. Verify the local compiler helper service is active at http://127.0.0.1:4000.');
+        addFlashLog('   3. If newly installed, make sure the service has started.');
+        return;
+      }
+
+      // Step 2: Prepare project files payload
       const filesPayload: Record<string, string> = {};
       for (const [filename, fileObj] of Object.entries(files)) {
         filesPayload[filename] = fileObj.content;
@@ -489,13 +536,14 @@ export default function IDEPage() {
 
       const activeContent = files[activeFile]?.content || '';
 
-      const response = await fetch('/api/compile', {
+      // Step 3: Send compile request to local helper
+      const response = await fetch(`${COMPILER_HELPER_URL}/compile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          code: activeContent,
-          activeFile: activeFile,
           files: filesPayload,
+          activeFile: activeFile,
+          code: activeContent,
         }),
       });
 
@@ -511,7 +559,8 @@ export default function IDEPage() {
         addFlashLog('✅ BUILD & LINK SUCCESSFUL');
         addFlashLog('');
         addFlashLog(`  Target:     ${data.target || 'VEGA ARIES v2 (THEJAS32)'}`);
-        addFlashLog(`  Firmware:   VEGA_ARIES_v2_TEST.bin`);
+        addFlashLog(`  Toolchain:  ${data.toolchain || 'riscv32-vega-elf-g++ (VEGA GCC 10.1.0)'}`);
+        addFlashLog(`  Firmware:   ${data.filename || 'VEGA_ARIES_v2_TEST.bin'}`);
         if (data.compiledFiles && data.compiledFiles.length > 0) {
           addFlashLog(`  Compiled:   ${data.compiledFiles.join(', ')}`);
         }
@@ -554,8 +603,8 @@ export default function IDEPage() {
       setBuildStatus('failed');
       setBinaryBase64(null);
       addFlashLog('');
-      addFlashLog(`❌ BUILD ERROR: ${error.message || 'Network request failed'}`);
-      addFlashLog('   Failed to connect to /api/compile endpoint.');
+      addFlashLog('❌ BUILD FAILED: VEGA Compiler Helper is not running. Please install or start VEGA Lab Compiler.');
+      addFlashLog(`   Details: ${error.message || 'Connection to http://127.0.0.1:4000 failed'}`);
     }
   };
 
@@ -950,6 +999,8 @@ export default function IDEPage() {
               <span className="badge badge-info" style={{ fontSize: '0.6rem' }}>THEJAS32</span>
             </div>
           </div>
+
+          <VegaLabSetupCard compact />
         </div>
 
         {/* Editor Area */}

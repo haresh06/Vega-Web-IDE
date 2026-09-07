@@ -21,6 +21,7 @@ import {
   Compass,
   FileText
 } from 'lucide-react';
+import VegaLabSetupCard from '@/components/ide/VegaLabSetupCard';
 
 export default function DocsPage() {
   return (
@@ -341,6 +342,25 @@ export default function DocsPage() {
             <Bell size={16} className="peri-icon" />
             <span>Interrupts</span>
           </Link>
+        </div>
+      </section>
+
+      {/* ========================================================
+          4. COMPILER & TOOLCHAIN SETUP SECTION
+      ======================================================== */}
+      <section className="doc-section-block">
+        <div className="section-title-wrap">
+          <div className="section-heading">
+            <span className="section-icon-gear">⚙</span>
+            <h2>4. COMPILER & TOOLCHAIN SETUP</h2>
+          </div>
+          <p className="section-subtext">
+            Install the portable VEGA RISC-V compiler package once for local compilation.
+          </p>
+        </div>
+
+        <div style={{ maxWidth: '460px' }}>
+          <VegaLabSetupCard />
         </div>
       </section>
 

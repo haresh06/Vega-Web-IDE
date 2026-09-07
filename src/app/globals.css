@@ -4,33 +4,33 @@
 @import "./learn.css";
 
 @theme {
-  --color-bg-primary: #0a0e17;
-  --color-bg-secondary: #111827;
-  --color-bg-card: #1a1f2e;
-  --color-bg-card-hover: #232940;
-  --color-bg-input: #0f1420;
-  --color-bg-terminal: #0c0c0c;
+  --color-bg-primary: #01040d;
+  --color-bg-secondary: #03081a;
+  --color-bg-card: #040a20;
+  --color-bg-card-hover: #071338;
+  --color-bg-input: #020614;
+  --color-bg-terminal: #010206;
   
-  --color-accent-cyan: #06d6a0;
-  --color-accent-blue: #4cc9f0;
-  --color-accent-purple: #7b2ff7;
-  --color-accent-orange: #ff6b35;
-  --color-accent-pink: #f72585;
-  --color-accent-yellow: #ffd60a;
-  --color-accent-green: #2dc653;
-  --color-accent-red: #ef233c;
+  --color-accent-cyan: #00f0ff;
+  --color-accent-blue: #38bdf8;
+  --color-accent-purple: #a855f7;
+  --color-accent-orange: #ff7849;
+  --color-accent-pink: #f43f5e;
+  --color-accent-yellow: #facc15;
+  --color-accent-green: #10b981;
+  --color-accent-red: #ef4444;
   
-  --color-text-primary: #e8eaed;
-  --color-text-secondary: #9ca3af;
-  --color-text-muted: #6b7280;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #7888a0;
   
-  --color-border: #1e293b;
-  --color-border-light: #334155;
+  --color-border: #0e1b38;
+  --color-border-light: #1e335f;
   
-  --color-success: #2dc653;
-  --color-warning: #fbbf24;
+  --color-success: #10b981;
+  --color-warning: #facc15;
   --color-error: #ef4444;
-  --color-info: #4cc9f0;
+  --color-info: #00f0ff;
 
   --font-sans: 'General Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
