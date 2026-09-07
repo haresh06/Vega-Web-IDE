@@ -284,15 +284,17 @@ export default function ExperimentPage() {
         }
         .step-card-item {
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           gap: 0.85rem;
-          padding: 0.85rem 1rem;
+          padding: 0.95rem 1.15rem;
           background: var(--color-bg-input);
-          border-radius: 8px;
+          border-radius: 10px;
           border: 1px solid var(--color-border);
           text-decoration: none;
           color: inherit;
           transition: all 0.2s ease;
+          min-height: 80px;
+          box-sizing: border-box;
         }
         .step-card-item:hover {
           border-color: var(--color-accent-cyan);
@@ -303,29 +305,57 @@ export default function ExperimentPage() {
           margin-left: auto;
           color: var(--color-accent-cyan);
           font-size: 0.95rem;
+          flex-shrink: 0;
+          align-self: center;
           transition: transform 0.2s;
         }
         .step-card-item:hover .step-link-arrow {
           transform: translateX(3px);
         }
         .step-num-pill {
+          width: 28px;
+          min-width: 28px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
           font-family: var(--font-mono);
-          font-size: 0.75rem;
+          font-size: 0.78rem;
           font-weight: 800;
           color: var(--color-accent-cyan);
           background: rgba(6, 214, 160, 0.12);
-          padding: 0.25rem 0.5rem;
+          border: 1px solid rgba(6, 214, 160, 0.25);
           border-radius: 6px;
+          margin-top: 1px;
+        }
+        .step-content-col {
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
         }
         .step-content-col h4 {
+          font-family: 'General Sans', sans-serif;
           font-size: 0.92rem;
           font-weight: 700;
-          margin-bottom: 0.2rem;
+          line-height: 1.35;
+          color: #f1f5f9;
+          margin: 0;
+          word-break: break-word;
+          overflow-wrap: break-word;
         }
         .step-content-col p {
+          font-family: 'General Sans', sans-serif;
           font-size: 0.78rem;
+          font-weight: 400;
           color: var(--color-text-muted);
-          line-height: 1.4;
+          line-height: 1.45;
+          margin: 0;
+          word-break: break-word;
+          overflow-wrap: break-word;
+          white-space: normal;
         }
 
         /* Hardware Experiments Grid */

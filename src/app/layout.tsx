@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import Sidebar from "@/components/layout/Sidebar";
+import AppShell from "@/components/layout/AppShell";
 
 export const metadata: Metadata = {
   title: "VEGA Learn & Lab — Embedded Systems Learning Platform",
@@ -19,17 +19,14 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://api.fontshare.com/v2/css?f[]=general-sans@300,400,500,600,700,800,900&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body>
         <ThemeProvider>
-          {/* Left Sidebar Navigation */}
-          <Sidebar />
-
-          {/* Main App Content Area */}
-          <div className="app-main-layout">
+          <AppShell>
             {children}
-          </div>
+          </AppShell>
         </ThemeProvider>
       </body>
     </html>

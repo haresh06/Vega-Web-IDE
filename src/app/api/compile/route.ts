@@ -112,44 +112,43 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // Source code extraction: supports string `code`, `sourceCode`, or `files` object map
-    let sourceCode = '';
-    const extraFiles: Record<string, string> = {};
+    // Map of all project files { "main.cpp": "...", "delay.c": "...", "delay.h": "..." }
+    const projectFiles: Record<string, string> = {};
 
-    if (typeof body.sourceCode === 'string') {
-      sourceCode = body.sourceCode;
-    } else if (typeof body.code === 'string') {
-      sourceCode = body.code;
-    } else if (body.files && typeof body.files === 'object') {
-      // Find main source file (main.cpp, main.c, sketch.ino, etc.)
-      const mainKey =
-        Object.keys(body.files).find(
-          (k) => k === 'main.cpp' || k === 'main.c' || k === 'sketch.ino' || k.endsWith('.cpp') || k.endsWith('.c')
-        ) || Object.keys(body.files)[0];
-
-      if (mainKey) {
-        const item = body.files[mainKey];
-        sourceCode = typeof item === 'string' ? item : item.content || '';
-      }
-
-      // Collect any additional header or source files
+    if (body.files && typeof body.files === 'object') {
       for (const [fileName, fileObj] of Object.entries(body.files)) {
-        if (fileName !== mainKey) {
-          extraFiles[fileName] = typeof fileObj === 'string' ? fileObj : (fileObj as { content?: string }).content || '';
-        }
+        projectFiles[fileName] = typeof fileObj === 'string' ? fileObj : (fileObj as { content?: string }).content || '';
       }
     }
 
-    if (!sourceCode.trim()) {
+    // Ensure active/provided code is in projectFiles if supplied
+    if (typeof body.code === 'string' && body.code.trim()) {
+      const activeName = body.activeFile || 'main.cpp';
+      projectFiles[activeName] = body.code;
+    } else if (typeof body.sourceCode === 'string' && body.sourceCode.trim()) {
+      const activeName = body.activeFile || 'main.cpp';
+      projectFiles[activeName] = body.sourceCode;
+    }
+
+    // If still empty, return error
+    if (Object.keys(projectFiles).length === 0) {
       return NextResponse.json(
         {
           success: false,
-          error: 'No source code provided in request body.',
+          error: 'No source code or project files provided.',
           phase: 'validation',
         },
         { status: 400 }
       );
     }
+
+    // Identify main source file (main.cpp, main.c, sketch.ino, or first .c/.cpp)
+    let mainKey =
+      Object.keys(projectFiles).find(
+        (k) => k === 'main.cpp' || k === 'main.c' || k === 'sketch.ino' || k === 'sketch.cpp'
+      ) ||
+      Object.keys(projectFiles).find((k) => k.endsWith('.cpp') || k.endsWith('.c')) ||
+      Object.keys(projectFiles)[0];
 
     // Verify toolchain paths existence on host
     try {
@@ -174,80 +173,115 @@ export async function POST(req: NextRequest) {
     tmpDir = path.join(os.tmpdir(), uniqueId);
     await fs.mkdir(tmpDir, { recursive: true });
 
-    // Write main source file (sketch.cpp)
-    const mainSrcFile = path.join(tmpDir, 'sketch.cpp');
-    const mainObjFile = path.join(tmpDir, 'sketch.o');
-    const elfFile = path.join(tmpDir, 'sketch.elf');
-    const binFile = path.join(tmpDir, 'sketch.bin');
+    // Write all project files into the temporary build folder
+    for (const [fileName, fileContent] of Object.entries(projectFiles)) {
+      const sanitizedName = path.basename(fileName);
+      let contentToWrite = fileContent;
 
-    // Auto-inject #include <Arduino.h> if not already present and using Arduino constructs
-    let processedCode = sourceCode;
-    if (!processedCode.includes('Arduino.h') && !processedCode.includes('thejas32')) {
-      processedCode = `#include <Arduino.h>\n${processedCode}`;
-    }
+      // For main sketch file, auto-inject #include <Arduino.h> if not already present
+      if (
+        (sanitizedName === mainKey || sanitizedName === 'main.cpp' || sanitizedName === 'main.c') &&
+        !contentToWrite.includes('Arduino.h') &&
+        !contentToWrite.includes('thejas32')
+      ) {
+        contentToWrite = `#include <Arduino.h>\n${contentToWrite}`;
+      }
 
-    await fs.writeFile(mainSrcFile, processedCode, 'utf-8');
-
-    // Write any auxiliary header/source files into the temporary build folder
-    for (const [extraName, extraContent] of Object.entries(extraFiles)) {
-      const sanitizedName = path.basename(extraName);
-      await fs.writeFile(path.join(tmpDir, sanitizedName), extraContent, 'utf-8');
+      await fs.writeFile(path.join(tmpDir, sanitizedName), contentToWrite, 'utf-8');
     }
 
     // ========================================================================
-    // STEP 1: COMPILE SOURCE TO OBJECT FILE (.cpp -> .o)
+    // STEP 1: COMPILE ALL SOURCE FILES (.cpp, .c) TO OBJECT FILES (.o)
     // ========================================================================
-    const compileArgs = [
-      '-c',
-      '-O3',
-      '-march=rv32im',
-      '-mabi=ilp32',
-      '-fpeel-loops',
-      '-ffunction-sections',
-      '-fdata-sections',
-      '-fpermissive',
-      '-Wno-unused-function',
-      '-Wno-unused-variable',
-      '-Wno-comment',
-      '-Wno-dangling-else',
-      '-Wno-unused-but-set-variable',
-      '-Wall',
-      '-fno-rtti',
-      '-fno-exceptions',
-      '-DF_CPU=100000000L',
-      '-DVEGA_ARIES_V2',
-      '-DARDUINO=10819',
-      `-I${INC_SYSTEM}`,
-      `-I${INC_THEJAS}`,
-      `-I${INC_CORE}`,
-      `-I${INC_VARIANT}`,
-      `-I${tmpDir}`,
-      '-include',
-      'sys/cdefs.h',
-      '-g',
-      mainSrcFile,
-      '-o',
-      mainObjFile,
-    ];
+    const sourceFiles = Object.keys(projectFiles).filter((name) => {
+      const lower = name.toLowerCase();
+      return lower.endsWith('.c') || lower.endsWith('.cpp') || lower.endsWith('.cc') || lower.endsWith('.cxx');
+    });
 
-    const compileRes = await runCommand(GXX_PATH, compileArgs, tmpDir);
-
-    if (compileRes.code !== 0) {
+    if (sourceFiles.length === 0) {
       return NextResponse.json(
         {
           success: false,
+          error: 'No compilable C/C++ source files found (.c, .cpp).',
           phase: 'compile',
-          error: 'Compilation failed with errors.',
-          stdout: compileRes.stdout,
-          stderr: compileRes.stderr,
         },
-        { status: 422 }
+        { status: 400 }
       );
     }
 
+    const compiledObjectFiles: string[] = [];
+    const allCompileStdout: string[] = [];
+    const allCompileStderr: string[] = [];
+
+    for (const srcName of sourceFiles) {
+      const sanitizedSrc = path.basename(srcName);
+      const srcFullPath = path.join(tmpDir, sanitizedSrc);
+      const objName = `${path.parse(sanitizedSrc).name}_${crypto.createHash('md5').update(sanitizedSrc).digest('hex').slice(0, 4)}.o`;
+      const objFullPath = path.join(tmpDir, objName);
+
+      const isCpp = srcName.toLowerCase().endsWith('.cpp') || srcName.toLowerCase().endsWith('.cc') || srcName.toLowerCase().endsWith('.cxx');
+      const compilerExecutable = GXX_PATH;
+
+      const compileArgs = [
+        '-c',
+        '-O3',
+        '-march=rv32im',
+        '-mabi=ilp32',
+        '-fpeel-loops',
+        '-ffunction-sections',
+        '-fdata-sections',
+        '-fpermissive',
+        '-Wno-unused-function',
+        '-Wno-unused-variable',
+        '-Wno-comment',
+        '-Wno-dangling-else',
+        '-Wno-unused-but-set-variable',
+        '-Wall',
+        '-fno-rtti',
+        '-fno-exceptions',
+        '-DF_CPU=100000000L',
+        '-DVEGA_ARIES_V2',
+        '-DARDUINO=10819',
+        `-I${INC_SYSTEM}`,
+        `-I${INC_THEJAS}`,
+        `-I${INC_CORE}`,
+        `-I${INC_VARIANT}`,
+        `-I${tmpDir}`,
+        '-include',
+        'sys/cdefs.h',
+        '-g',
+        srcFullPath,
+        '-o',
+        objFullPath,
+      ];
+
+      const compileRes = await runCommand(compilerExecutable, compileArgs, tmpDir);
+
+      if (compileRes.stdout) allCompileStdout.push(`[${sanitizedSrc}] ${compileRes.stdout}`);
+      if (compileRes.stderr) allCompileStderr.push(`[${sanitizedSrc}] ${compileRes.stderr}`);
+
+      if (compileRes.code !== 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            phase: 'compile',
+            error: `Compilation failed for file '${sanitizedSrc}'.`,
+            stdout: allCompileStdout.join('\n'),
+            stderr: allCompileStderr.join('\n') || compileRes.stderr,
+          },
+          { status: 422 }
+        );
+      }
+
+      compiledObjectFiles.push(objFullPath);
+    }
+
     // ========================================================================
-    // STEP 2: LINK OBJECT FILE WITH PRECOMPILED core.a & link1.lds (.o -> .elf)
+    // STEP 2: LINK ALL OBJECT FILES WITH PRECOMPILED core.a & link1.lds (.o -> .elf)
     // ========================================================================
+    const elfFile = path.join(tmpDir, 'firmware.elf');
+    const binFile = path.join(tmpDir, 'firmware.bin');
+
     const linkArgs = [
       '-march=rv32im',
       '-mabi=ilp32',
@@ -258,7 +292,7 @@ export async function POST(req: NextRequest) {
       '-Wl,--wrap=malloc',
       '-Wl,--wrap=free',
       '-Wl,--wrap=sbrk',
-      mainObjFile,
+      ...compiledObjectFiles,
       '-nostdlib',
       '-Wl,--start-group',
       PRECOMPILED_CORE_A,
@@ -279,9 +313,9 @@ export async function POST(req: NextRequest) {
         {
           success: false,
           phase: 'link',
-          error: 'Linking failed with errors.',
-          stdout: compileRes.stdout + (linkRes.stdout ? `\n${linkRes.stdout}` : ''),
-          stderr: linkRes.stderr,
+          error: 'Linking failed with unresolved symbols or errors.',
+          stdout: allCompileStdout.join('\n') + (linkRes.stdout ? `\n${linkRes.stdout}` : ''),
+          stderr: allCompileStderr.join('\n') + (linkRes.stderr ? `\n${linkRes.stderr}` : ''),
         },
         { status: 422 }
       );
@@ -328,8 +362,9 @@ export async function POST(req: NextRequest) {
       binaryBase64: binBase64,
       checksum: checksum,
       size: parsedSize,
-      stdout: [compileRes.stdout, linkRes.stdout, sizeRes.stdout].filter(Boolean).join('\n'),
-      stderr: [compileRes.stderr, linkRes.stderr].filter(Boolean).join('\n'),
+      compiledFiles: sourceFiles,
+      stdout: [...allCompileStdout, linkRes.stdout, sizeRes.stdout].filter(Boolean).join('\n'),
+      stderr: [...allCompileStderr, linkRes.stderr].filter(Boolean).join('\n'),
     });
   } catch (error: unknown) {
     const err = error as Error;

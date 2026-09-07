@@ -78,6 +78,11 @@ export default function Sidebar() {
     setMobileOpen(false);
   }, [pathname]);
 
+  // Sidebar is hidden completely on the landing page ('/')
+  if (pathname === '/') {
+    return null;
+  }
+
   return (
     <>
       {/* Mobile Top Header */}

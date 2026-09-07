@@ -22,8 +22,101 @@ export default function HomePage() {
   const [scrollY, setScrollY] = useState(0);
   const [statsAnimated, setStatsAnimated] = useState(false);
   const [activeJourneyStep, setActiveJourneyStep] = useState(0);
-  const heroBoardRef = useRef<HTMLDivElement>(null);
-  const [mousePos, setMousePos] = useState({ rx: 3, ry: -5, tx: 0, ty: 0 });
+  const [animState, setAnimState] = useState<'initial' | 'zooming' | 'receding' | 'settled'>('initial');
+
+  // DOM Refs for 60 FPS transform updates without triggering React re-renders
+  const heroSectionRef = useRef<HTMLDivElement>(null);
+  const boardWrapperRef = useRef<HTMLDivElement>(null);
+  const bgGlowRef = useRef<HTMLDivElement>(null);
+  const bgGridRef = useRef<HTMLDivElement>(null);
+  const textColRef = useRef<HTMLDivElement>(null);
+
+  // Mouse parallax state for requestAnimationFrame loop
+  const targetPos = useRef({ x: 0, y: 0 });
+  const currentPos = useRef({ x: 0, y: 0 });
+  const rafId = useRef<number | null>(null);
+  const isReducedMotion = useRef(false);
+
+  // 1. Cinematic Intro Timeline
+  useEffect(() => {
+    // Check user preference for reduced motion
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    isReducedMotion.current = motionQuery.matches;
+
+    if (isReducedMotion.current) {
+      setAnimState('settled');
+      return;
+    }
+
+    // Step 1: Initial Mount -> Zooming (Board appears close & large)
+    const t1 = setTimeout(() => {
+      setAnimState('zooming');
+    }, 50);
+
+    // Step 2: Receding (Board pulls back to Left side, Text starts revealing on Right)
+    const t2 = setTimeout(() => {
+      setAnimState('receding');
+    }, 900);
+
+    // Step 3: Settled (Parallax enabled, all elements fully interactive)
+    const t3 = setTimeout(() => {
+      setAnimState('settled');
+    }, 2800);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, []);
+
+  // 2. High-Performance Mouse Parallax Loop (rAF + Lerp)
+  useEffect(() => {
+    if (animState !== 'settled' || isReducedMotion.current) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const { innerWidth, innerHeight } = window;
+      const x = (e.clientX / innerWidth) * 2 - 1; // -1 to 1
+      const y = (e.clientY / innerHeight) * 2 - 1; // -1 to 1
+      targetPos.current = { x, y };
+    };
+
+    const updateParallax = () => {
+      // Lerp (Linear Interpolation) for buttery smooth spring easing
+      currentPos.current.x += (targetPos.current.x - currentPos.current.x) * 0.055;
+      currentPos.current.y += (targetPos.current.y - currentPos.current.y) * 0.055;
+
+      const { x, y } = currentPos.current;
+
+      // Board: Subtle 3D tilt & gentle translation
+      if (boardWrapperRef.current) {
+        boardWrapperRef.current.style.transform = `perspective(1200px) rotateX(${-y * 10}deg) rotateY(${x * 12}deg) translate3d(${x * 14}px, ${y * 10}px, 0px)`;
+      }
+
+      // Background Grid & Glow: Gentle counter-parallax for deep perspective
+      if (bgGridRef.current) {
+        bgGridRef.current.style.transform = `translate3d(${-x * 18}px, ${-y * 14}px, 0px)`;
+      }
+      if (bgGlowRef.current) {
+        bgGlowRef.current.style.transform = `translate3d(${-x * 25}px, ${-y * 20}px, 0px) scale(${1 + Math.abs(x * 0.05)})`;
+      }
+
+      // Text Column: Extremely subtle stabilization parallax
+      if (textColRef.current) {
+        textColRef.current.style.transform = `translate3d(${x * 4}px, ${y * 3}px, 0px)`;
+      }
+
+      rafId.current = requestAnimationFrame(updateParallax);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    rafId.current = requestAnimationFrame(updateParallax);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+    };
+  }, [animState]);
 
   // Scroll listener for hero fade-out and scroll-triggered animations
   useEffect(() => {
@@ -49,26 +142,9 @@ export default function HomePage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [statsAnimated]);
 
-  // Interactive 3D mouse tilt for the hero board
-  const handleHeroMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    const y = ((e.clientY - rect.top) / rect.height) * 2 - 1;
-    setMousePos({
-      rx: -y * 14,
-      ry: x * 16,
-      tx: x * 15,
-      ty: y * 12,
-    });
-  };
-
-  const handleHeroMouseLeave = () => {
-    setMousePos({ rx: 3, ry: -5, tx: 0, ty: 0 });
-  };
-
-  // Hero fade-out calculation (Disappears completely when scrolling past hero)
-  const heroOpacity = Math.max(0, Math.min(1, 1 - scrollY / 420));
-  const heroScale = Math.max(0.92, 1 - (scrollY / 1000) * 0.1);
+  // Hero fade-out calculation for smooth transition into dashboard
+  const heroOpacity = Math.max(0, Math.min(1, 1 - scrollY / 500));
+  const heroScale = Math.max(0.92, 1 - (scrollY / 1000) * 0.08);
   const isHeroVisible = heroOpacity > 0.01;
 
   // Features list
@@ -158,12 +234,11 @@ export default function HomePage() {
   return (
     <div className="overview-page">
       {/* ========================================================
-          1. HERO SECTION (With Board, PCB Glow, and Smooth Fade)
+          1. FULL-SCREEN CINEMATIC CENTERED HERO SECTION
       ======================================================== */}
       <section
-        className="hero-section"
-        onMouseMove={handleHeroMouseMove}
-        onMouseLeave={handleHeroMouseLeave}
+        ref={heroSectionRef}
+        className={`hero-cinematic-section anim-phase-${animState}`}
         style={{
           opacity: isHeroVisible ? heroOpacity : 0,
           pointerEvents: isHeroVisible ? 'auto' : 'none',
@@ -171,122 +246,118 @@ export default function HomePage() {
           transform: `scale(${heroScale}) translateY(${scrollY * 0.12}px)`,
         }}
       >
-        {/* Ambient Hero Glow & Circuit Grid (Confined strictly to Hero) */}
-        <div className="hero-glow-layer" />
-        <div className="hero-pcb-grid" />
+        {/* Cinematic Ambient Backdrop Lighting & Technical Grid */}
+        <div ref={bgGlowRef} className="hero-glow-layer" />
+        <div ref={bgGridRef} className="hero-pcb-grid" />
+        <div className="hero-light-flare-streak" />
 
-        <div className="hero-content-grid">
-          {/* Left Column: Heading, Tagline, Description & Attractive CTAs */}
-          <div className="hero-text-col">
-            <div className="hero-platform-badge">
-              <span className="badge-pulse-dot" />
-              <span>VEGA ARIES v2.0 PLATFORM</span>
-              <span className="badge-tag">THEJAS32 RISC-V</span>
+        {/* ====================================================
+            TOP MINIMAL BRANDING BAR (Left: Brand, Right: Online Status)
+        ==================================================== */}
+        <header className="hero-top-bar">
+          <div className="top-brand-group">
+            <div className="brand-logo-gem">
+              <span className="gem-inner" />
             </div>
-
-            <h1 className="hero-headline">
-              <span className="headline-line line-teal">MASTER EMBEDDED.</span>
-              <span className="headline-line line-cyan">BUILD INNOVATION.</span>
-              <span className="headline-line line-purple">FLASH THE FUTURE.</span>
-            </h1>
-
-            <p className="hero-description">
-              An integrated learning and experimentation platform for VEGA ARIES v2.0 and THEJAS32 RISC-V —
-              combining embedded learning, interactive labs, coding, firmware deployment and real hardware experimentation.
-            </p>
-
-            {/* THREE ATTRACTIVE BUTTONS WITH VIBRANT BG COLORS & GLOWING BLURRY HOVER/TOUCH EFFECTS */}
-            <div className="hero-cta-buttons">
-              {/* 1. Start Learning Journey (Luminous Teal-Cyan Gradient with Ambient Glow) */}
-              <Link href="/learn" className="btn-hero-learning">
-                <div className="btn-blur-halo" />
-                <span className="btn-icon">🚀</span>
-                <span className="btn-text">Start Learning Journey</span>
-                <ArrowRight size={18} className="btn-arrow" />
-              </Link>
-
-              {/* 2. Open VEGA IDE (Indigo/Purple Glass Card with Radiant Blur) */}
-              <Link href="/ide" className="btn-hero-ide">
-                <div className="btn-blur-halo ide-halo" />
-                <span className="btn-icon">💻</span>
-                <span className="btn-text">Open VEGA IDE</span>
-              </Link>
-
-              {/* 3. Explore Labs (Cyan/Electric Blue Glass Card with Shimmer Blur) */}
-              <Link href="/experiment" className="btn-hero-labs">
-                <div className="btn-blur-halo labs-halo" />
-                <span className="btn-icon">🔬</span>
-                <span className="btn-text">Explore Labs</span>
-              </Link>
+            <div className="brand-titles">
+              <span className="brand-name">VEGA LAB</span>
+              <span className="brand-chip">THEJAS32 RISC-V</span>
             </div>
           </div>
 
-          {/* Right Column: Prominent VEGA ARIES v2.0 Board Showcase */}
-          <div className="hero-board-showcase">
-            <div className="board-header-label">
-              <span className="board-badge-glow">VEGA ARIES v2.0</span>
-            </div>
+          <div className="top-status-badge">
+            <span className="status-live-dot" />
+            <span className="status-text">ARIES v2.0 Online</span>
+          </div>
+        </header>
 
-            <div
-              ref={heroBoardRef}
-              className="board-interactive-wrapper"
-              style={{
-                transform: `perspective(1000px) rotateX(${mousePos.rx}deg) rotateY(${mousePos.ry}deg) translate3d(${mousePos.tx}px, ${mousePos.ty}px, 0px)`,
-              }}
-            >
-              {/* Radial Cyan Glow behind board */}
-              <div className="board-halo-glow" />
+        {/* ====================================================
+            VEGA ARIES v2 BOARD (CINEMATIC BACKGROUND ENTITY)
+        ==================================================== */}
+        <div className="hero-board-backdrop-center">
+          <div ref={boardWrapperRef} className="board-cinematic-stage">
+            {/* Luminous Radial Neon Halo behind board */}
+            <div className="board-halo-glow" />
 
-              {/* Real Transparent VEGA ARIES v2.0 Board Image */}
-              <img
-                src="/images/vega-aries-board.png"
-                alt="VEGA ARIES v2.0 THEJAS32 RISC-V Board"
-                className="board-main-image"
-              />
+            {/* Hardware Board Image */}
+            <img
+              src="/images/vega-aries-board.png"
+              alt="VEGA ARIES v2.0 THEJAS32 RISC-V Hardware Board"
+              className="board-cinematic-image"
+              priority-hint="high"
+            />
+          </div>
+        </div>
 
-              {/* Hardware Callout Badges around board pins */}
-              <div className="pin-callout pin-top-left">
-                <span className="pin-dot" />
-                <span className="pin-text">GPIO • 32 Multiplexed</span>
-              </div>
+        {/* ====================================================
+            MAIN CENTERED FOREGROUND HERO CONTENT
+        ==================================================== */}
+        <div ref={textColRef} className="hero-centered-content">
+          {/* Main Dominant Headline (Stacked & Centered in General Sans 900) */}
+          <h1 className="hero-headline-centered">
+            <span className="headline-line headline-line-1">
+              <span className="headline-text text-white">LEARN VEGA.</span>
+            </span>
+            <span className="headline-line headline-line-2">
+              <span className="headline-text text-emerald">DEVELOP WITH RISC-V.</span>
+            </span>
+            <span className="headline-line headline-line-3">
+              <span className="headline-text text-cyan-gradient">BUILD THE FUTURE.</span>
+            </span>
+          </h1>
 
-              <div className="pin-callout pin-top-right">
-                <span className="pin-dot" />
-                <span className="pin-text">UART0 / UART1</span>
-              </div>
+          {/* Centered Supporting Description (Max width 850–950px in General Sans 400) */}
+          <p className="hero-description-centered">
+            A comprehensive training and experimentation platform for VEGA ARIES v2.0 and THEJAS32 RISC-V, designed to provide hands-on learning in embedded systems, processor programming, firmware development, hardware interfacing, and real-world application development.
+          </p>
 
-              <div className="pin-callout pin-mid-left">
-                <span className="pin-dot" />
-                <span className="pin-text">I2C Master Bus</span>
-              </div>
+          {/* THREE CENTERED HERO ACTION BUTTONS (Single Row on Desktop) */}
+          <div className="hero-cta-buttons-centered">
+            {/* 1. START TRAINING (Luminous Emerald-Cyan Gradient with Ambient Glow) */}
+            <Link href="/learn" className="btn-hero-learning">
+              <div className="btn-blur-halo" />
+              <span className="btn-icon">🚀</span>
+              <span className="btn-text">START TRAINING</span>
+              <ArrowRight size={18} className="btn-arrow" />
+            </Link>
 
-              <div className="pin-callout pin-mid-right">
-                <span className="pin-dot" />
-                <span className="pin-text">SPI High-Speed Flash</span>
-              </div>
+            {/* 2. OPEN VEGA IDE (Indigo/Purple Glass Card with Radiant Blur) */}
+            <Link href="/ide" className="btn-hero-ide">
+              <div className="btn-blur-halo ide-halo" />
+              <span className="btn-icon">💻</span>
+              <span className="btn-text">OPEN VEGA IDE</span>
+            </Link>
 
-              <div className="pin-callout pin-bot-left">
-                <span className="pin-dot" />
-                <span className="pin-text">ADC 10-bit &amp; PWM</span>
-              </div>
+            {/* 3. EXPLORE LABS (Cyan/Teal Glass Card with Shimmer Blur) */}
+            <Link href="/experiment" className="btn-hero-labs">
+              <div className="btn-blur-halo labs-halo" />
+              <span className="btn-icon">🔬</span>
+              <span className="btn-text">EXPLORE LABS</span>
+            </Link>
+          </div>
+        </div>
 
-              <div className="pin-callout pin-bot-right">
-                <span className="pin-dot" />
-                <span className="pin-text">ESP32 OTA Bridge</span>
-              </div>
-            </div>
-
-            <div className="board-footer-label">
-              <span className="board-sub-title">THEJAS32 RISC-V • 100MHz C-DAC INDIA</span>
-            </div>
+        {/* ====================================================
+            BOTTOM CENTERED SCROLL INDICATOR
+        ==================================================== */}
+        <div
+          className="hero-scroll-indicator"
+          onClick={() => {
+            const bodyElem = document.getElementById('dashboard-body-content');
+            if (bodyElem) bodyElem.scrollIntoView({ behavior: 'smooth' });
+          }}
+        >
+          <span className="scroll-label">SCROLL TO EXPLORE</span>
+          <div className="scroll-mouse-icon">
+            <span className="scroll-mouse-wheel" />
           </div>
         </div>
       </section>
 
       {/* ========================================================
-          2. DASHBOARD BODY CONTENT (Clean Dark Background Below Hero)
+          2. DASHBOARD BODY CONTENT (Below 100vh Hero)
       ======================================================== */}
-      <div className="dashboard-body-container">
+      <div id="dashboard-body-content" className="dashboard-body-container">
         {/* 2A. STATISTICS ROW */}
         <section className="stats-section">
           <div className="stats-grid">

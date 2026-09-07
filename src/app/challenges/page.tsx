@@ -1,124 +1,333 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { challenges } from '@/data/learning-content';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
+import { Brain, Code2, Sparkles, BookOpen, Terminal, CheckCircle2, ArrowRight } from 'lucide-react';
 
-export default function ChallengesPage() {
-  const [filter, setFilter] = useState<'all' | 'easy' | 'medium' | 'hard'>('all');
-  const filtered = filter === 'all' ? challenges : challenges.filter(c => c.difficulty === filter);
+function ChallengesLandingContent() {
+  const searchParams = useSearchParams();
+  const view = searchParams.get('view');
 
   return (
-    <div className="challenges-page">
+    <div className="challenges-landing-page">
+      {/* Header Section */}
       <div className="page-header">
-        <h1>🏆 Coding Challenges</h1>
-        <p>Test your embedded systems skills with real-world coding challenges.</p>
+        <div className="header-badge">
+          <Sparkles size={14} className="badge-icon" />
+          <span>Interactive Training & Assessment</span>
+        </div>
+        <h1>🏆 Challenges & Quizzes</h1>
+        <p className="page-subtitle">
+          Build your VEGA embedded-systems knowledge through quizzes and hands-on coding challenges.
+        </p>
       </div>
 
-      {/* Daily Challenge */}
-      <div className="daily-challenge card" style={{ maxWidth: 1200, margin: '0 auto 2rem', padding: '2rem' }}>
-        <div className="daily-badge">⚡ Daily Challenge</div>
-        <h3>Configure PWM to control LED brightness</h3>
-        <p>Write a program that gradually increases and decreases LED brightness using PWM on GPIO10.</p>
-        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', alignItems: 'center' }}>
-          <span className="badge badge-medium">Medium</span>
-          <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>⭐ 150 pts</span>
-          <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>⏱ 30 min</span>
-          <Link href="/challenges/daily" className="btn-primary" style={{ marginLeft: 'auto', fontSize: '0.85rem' }}>Accept Challenge →</Link>
+      {/* Two Large Equal Choices */}
+      <div className="choices-container">
+        {/* Choice 1: Quizzes */}
+        <div className="choice-card quiz-card">
+          <div className="choice-icon-wrap quiz-icon-bg">
+            <Brain size={36} className="choice-icon" />
+          </div>
+
+          <div className="choice-badge quiz-badge">Knowledge Assessment</div>
+
+          <h2>🧠 QUIZZES</h2>
+          <p className="choice-desc">
+            Test your knowledge of VEGA and embedded systems concepts with instant feedback, deep explanations, and comprehensive topic reviews.
+          </p>
+
+          <div className="choice-features">
+            <div className="feature-item">
+              <CheckCircle2 size={15} className="feat-check" />
+              <span><strong>28 Topics:</strong> Beginner, Intermediate & Advanced</span>
+            </div>
+            <div className="feature-item">
+              <CheckCircle2 size={15} className="feat-check" />
+              <span>Step-by-step interactive questions with explanations</span>
+            </div>
+            <div className="feature-item">
+              <CheckCircle2 size={15} className="feat-check" />
+              <span>Detailed score analysis & question review mode</span>
+            </div>
+          </div>
+
+          <div className="choice-footer">
+            <Link href="/challenges/quizzes" className="choice-btn quiz-btn">
+              <span>Start Quiz</span>
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+
+        {/* Choice 2: Coding Challenges */}
+        <div className="choice-card coding-card">
+          <div className="choice-icon-wrap coding-icon-bg">
+            <Code2 size={36} className="choice-icon" />
+          </div>
+
+          <div className="choice-badge coding-badge">Hands-on Programming</div>
+
+          <h2>💻 CODING CHALLENGES</h2>
+          <p className="choice-desc">
+            Solve real embedded programming problems, write hardware drivers, configure registers, and validate code against automated test cases.
+          </p>
+
+          <div className="choice-features">
+            <div className="feature-item">
+              <CheckCircle2 size={15} className="feat-check" />
+              <span><strong>Real Embedded C:</strong> GPIO, UART, SPI, I2C & Timers</span>
+            </div>
+            <div className="feature-item">
+              <CheckCircle2 size={15} className="feat-check" />
+              <span>Integrated with VEGA Studio IDE & compiler</span>
+            </div>
+            <div className="feature-item">
+              <CheckCircle2 size={15} className="feat-check" />
+              <span>Automated test case execution & point rewards</span>
+            </div>
+          </div>
+
+          <div className="choice-footer">
+            <Link href="/challenges/coding" className="choice-btn coding-btn">
+              <span>View Challenges</span>
+              <ArrowRight size={16} />
+            </Link>
+          </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="filters" style={{ maxWidth: 1200, margin: '0 auto', padding: '0 2rem 1rem' }}>
-        {(['all', 'easy', 'medium', 'hard'] as const).map(f => (
-          <button key={f} className={`filter-btn ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
-            {f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)} {f !== 'all' && `(${challenges.filter(c => c.difficulty === f).length})`}
-          </button>
-        ))}
-      </div>
-
-      {/* Challenge Cards */}
-      <div className="challenges-grid">
-        {filtered.map((challenge, i) => (
-          <div key={i} className="challenge-card card">
-            <div className="challenge-header">
-              <span className={`badge badge-${challenge.difficulty}`}>{challenge.difficulty}</span>
-              <span className="challenge-points">⭐ {challenge.points} pts</span>
-            </div>
-            <h3>{challenge.title}</h3>
-            <p>{challenge.description}</p>
-            <div className="challenge-reqs">
-              <h4>Requirements:</h4>
-              <ul>
-                {challenge.requirements.map((r, j) => (
-                  <li key={j}>{r}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="challenge-footer">
-              <span className="test-count">📋 {challenge.testCases.length} test cases</span>
-              <Link href={`/challenges/${challenge.id}`} className="btn-primary" style={{ fontSize: '0.8rem', padding: '0.5rem 1rem' }}>
-                Start Challenge →
-              </Link>
-            </div>
-          </div>
-        ))}
-      </div>
-
       <style jsx>{`
-        .challenges-page { padding-bottom: 4rem; }
-        .page-header { text-align: center; padding: 3rem 2rem 2rem; }
-        .page-header h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
-        .page-header p { color: var(--color-text-secondary); }
-
-        .daily-challenge { border-left: 4px solid var(--color-accent-orange); }
-        .daily-badge {
-          font-size: 0.75rem;
-          font-weight: 700;
-          color: var(--color-accent-orange);
-          margin-bottom: 0.5rem;
-        }
-        .daily-challenge h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; }
-        .daily-challenge p { color: var(--color-text-secondary); font-size: 0.9rem; }
-
-        .filters { display: flex; gap: 0.5rem; }
-        .filter-btn {
-          padding: 0.4rem 1rem;
-          border: 1px solid var(--color-border);
-          border-radius: 6px;
-          background: none;
-          color: var(--color-text-muted);
-          font-size: 0.8rem;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .filter-btn:hover { border-color: var(--color-accent-cyan); color: var(--color-text-primary); }
-        .filter-btn.active { border-color: var(--color-accent-cyan); color: var(--color-accent-cyan); background: rgba(6,214,160,0.08); }
-
-        .challenges-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-          gap: 1.25rem;
+        .challenges-landing-page {
+          min-height: calc(100vh - 60px);
+          padding: 3rem 2rem 5rem;
           max-width: 1200px;
           margin: 0 auto;
-          padding: 1rem 2rem;
+          font-family: 'General Sans', -apple-system, BlinkMacSystemFont, sans-serif;
         }
-        .challenge-card { display: flex; flex-direction: column; }
-        .challenge-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
-        .challenge-points { font-size: 0.85rem; font-weight: 600; color: var(--color-accent-yellow); }
-        .challenge-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
-        .challenge-card p { color: var(--color-text-secondary); font-size: 0.85rem; line-height: 1.6; margin-bottom: 0.75rem; }
-        .challenge-reqs h4 { font-size: 0.75rem; font-weight: 600; color: var(--color-text-muted); margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em; }
-        .challenge-reqs ul { list-style: none; padding: 0; }
-        .challenge-reqs li { font-size: 0.8rem; color: var(--color-text-secondary); padding: 0.2rem 0; }
-        .challenge-reqs li::before { content: '✓ '; color: var(--color-accent-cyan); }
-        .challenge-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--color-border); }
-        .test-count { font-size: 0.75rem; color: var(--color-text-muted); }
 
-        @media (max-width: 768px) {
-          .challenges-grid { grid-template-columns: 1fr; }
+        .page-header {
+          text-align: center;
+          margin-bottom: 3.5rem;
+        }
+
+        .header-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          padding: 0.35rem 0.85rem;
+          background: rgba(6, 214, 160, 0.08);
+          border: 1px solid rgba(6, 214, 160, 0.25);
+          border-radius: 9999px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: var(--color-accent-cyan, #06d6a0);
+          margin-bottom: 1rem;
+        }
+
+        .page-header h1 {
+          font-size: 2.5rem;
+          font-weight: 800;
+          color: var(--color-text-primary, #ffffff);
+          margin-bottom: 0.75rem;
+          letter-spacing: -0.02em;
+        }
+
+        .page-subtitle {
+          color: var(--color-text-secondary, #94a3b8);
+          font-size: 1.1rem;
+          max-width: 650px;
+          margin: 0 auto;
+          line-height: 1.6;
+        }
+
+        .choices-container {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 2rem;
+        }
+
+        .choice-card {
+          background: var(--color-bg-card, #10192e);
+          border: 1px solid var(--color-border, #1e293b);
+          border-radius: 16px;
+          padding: 2.5rem;
+          display: flex;
+          flex-direction: column;
+          position: relative;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          overflow: hidden;
+        }
+
+        .choice-card::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 4px;
+          transition: opacity 0.3s;
+        }
+
+        .quiz-card::before {
+          background: linear-gradient(90deg, #06d6a0, #38bdf8);
+        }
+
+        .coding-card::before {
+          background: linear-gradient(90deg, #38bdf8, #818cf8);
+        }
+
+        .choice-card:hover {
+          transform: translateY(-4px);
+          border-color: rgba(56, 189, 248, 0.3);
+          box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.4);
+        }
+
+        .choice-icon-wrap {
+          width: 64px;
+          height: 64px;
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 1.5rem;
+        }
+
+        .quiz-icon-bg {
+          background: rgba(6, 214, 160, 0.12);
+          color: #06d6a0;
+          border: 1px solid rgba(6, 214, 160, 0.3);
+        }
+
+        .coding-icon-bg {
+          background: rgba(56, 189, 248, 0.12);
+          color: #38bdf8;
+          border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
+        .choice-badge {
+          display: inline-block;
+          font-size: 0.72rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          padding: 0.2rem 0.6rem;
+          border-radius: 6px;
+          margin-bottom: 0.75rem;
+          width: fit-content;
+        }
+
+        .quiz-badge {
+          background: rgba(6, 214, 160, 0.15);
+          color: #06d6a0;
+        }
+
+        .coding-badge {
+          background: rgba(56, 189, 248, 0.15);
+          color: #38bdf8;
+        }
+
+        .choice-card h2 {
+          font-size: 1.5rem;
+          font-weight: 800;
+          color: var(--color-text-primary, #ffffff);
+          margin-bottom: 0.75rem;
+          letter-spacing: 0.02em;
+        }
+
+        .choice-desc {
+          color: var(--color-text-secondary, #94a3b8);
+          font-size: 0.95rem;
+          line-height: 1.6;
+          margin-bottom: 1.75rem;
+        }
+
+        .choice-features {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          margin-bottom: 2.25rem;
+          padding-top: 1.25rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .feature-item {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          font-size: 0.88rem;
+          color: var(--color-text-secondary, #cbd5e1);
+        }
+
+        .feat-check {
+          color: var(--color-accent-cyan, #06d6a0);
+          flex-shrink: 0;
+        }
+
+        .choice-footer {
+          margin-top: auto;
+        }
+
+        .choice-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          width: 100%;
+          padding: 0.9rem 1.5rem;
+          border-radius: 10px;
+          font-size: 0.95rem;
+          font-weight: 700;
+          text-decoration: none;
+          transition: all 0.2s;
+        }
+
+        .quiz-btn {
+          background: #06d6a0;
+          color: #0b1329;
+        }
+
+        .quiz-btn:hover {
+          background: #05bf8e;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px -4px rgba(6, 214, 160, 0.4);
+        }
+
+        .coding-btn {
+          background: #38bdf8;
+          color: #0b1329;
+        }
+
+        .coding-btn:hover {
+          background: #0ea5e9;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px -4px rgba(56, 189, 248, 0.4);
+        }
+
+        @media (max-width: 868px) {
+          .choices-container {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+          }
+
+          .challenges-landing-page {
+            padding: 2rem 1rem 4rem;
+          }
+
+          .page-header h1 {
+            font-size: 2rem;
+          }
         }
       `}</style>
     </div>
+  );
+}
+
+export default function ChallengesPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: '4rem', textAlign: 'center', color: '#94a3b8' }}>Loading Challenges & Quizzes...</div>}>
+      <ChallengesLandingContent />
+    </Suspense>
   );
 }

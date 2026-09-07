@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { learningPaths, protocolLabs, sensorLabs } from '@/data/learning-content';
+import LessonMarkdownRenderer from '@/components/learn/LessonMarkdownRenderer';
 
 type TabType = 'paths' | 'protocols' | 'sensors' | 'peripherals';
 
@@ -137,8 +138,9 @@ function LearnContentComponent() {
                                   >
                                     <span className="lesson-bullet">{lesson.completed ? '✅' : '○'}</span>
                                     <span className="lesson-idx">{String(li + 1).padStart(2, '0')}</span>
-                                    <span className="lesson-name">{lesson.title}</span>
-                                    <span className="lesson-arrow">→</span>
+                                    <span className="lesson-name">
+                                      {lesson.title} <span className="lesson-arrow">→</span>
+                                    </span>
                                   </Link>
                                 ))}
                               </div>
@@ -240,32 +242,7 @@ function LearnContentComponent() {
 
                 {/* Detailed Rich Content Body */}
                 <div className="step-markdown-body">
-                  {activeStepData.content ? (
-                    activeStepData.content.split('\n\n').map((block, bi) => {
-                      if (block.startsWith('### ')) {
-                        return <h3 key={bi} className="detail-h3">{block.replace('### ', '')}</h3>;
-                      }
-                      if (block.startsWith('```')) {
-                        const lines = block.split('\n');
-                        const code = lines.slice(1, -1).join('\n');
-                        return (
-                          <pre key={bi} className="detail-code-block">
-                            <code>{code}</code>
-                          </pre>
-                        );
-                      }
-                      if (block.startsWith('> ')) {
-                        return (
-                          <div key={bi} className="detail-callout-box">
-                            {block.replace('> ', '')}
-                          </div>
-                        );
-                      }
-                      return <p key={bi} className="detail-paragraph">{block}</p>;
-                    })
-                  ) : (
-                    <p className="detail-paragraph">{activeStepData.description}</p>
-                  )}
+                  <LessonMarkdownRenderer content={activeStepData.content || activeStepData.description} />
                 </div>
 
                 {/* Quick Step Navigation */}
@@ -585,39 +562,82 @@ function LearnContentComponent() {
         }
         .lesson-items-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 0.6rem;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 0.75rem;
           margin-bottom: 1.25rem;
+          align-items: stretch;
         }
         .lesson-interactive-item {
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           gap: 0.65rem;
-          padding: 0.65rem 0.85rem;
-          background: var(--color-bg-input);
-          border-radius: 8px;
+          padding: 0.85rem 1rem;
+          background: var(--color-bg-input, #0f1420);
+          border: 1px solid rgba(255, 255, 255, 0.07);
+          border-radius: 10px;
           text-decoration: none;
-          color: var(--color-text-secondary);
-          font-size: 0.85rem;
-          transition: all 0.2s ease;
+          color: #cbd5e1;
+          font-family: 'General Sans', sans-serif;
+          font-size: 0.86rem;
+          min-height: 72px;
+          box-sizing: border-box;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .lesson-interactive-item:hover {
           background: rgba(6, 214, 160, 0.08);
-          color: var(--color-text-primary);
-          transform: translateX(3px);
+          border-color: rgba(6, 214, 160, 0.3);
+          color: #ffffff;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+        }
+        .lesson-bullet {
+          width: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          font-size: 0.88rem;
+          line-height: 1.35;
         }
         .lesson-idx {
-          font-family: var(--font-mono);
-          font-size: 0.75rem;
-          color: var(--color-text-muted);
+          width: 24px;
+          text-align: center;
+          flex-shrink: 0;
+          font-family: var(--font-mono, 'JetBrains Mono', monospace);
+          font-size: 0.78rem;
+          font-weight: 700;
+          color: #64748b;
+          line-height: 1.5;
+          background: rgba(255, 255, 255, 0.05);
+          padding: 1px 4px;
+          border-radius: 4px;
+          border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .lesson-interactive-item:hover .lesson-idx {
+          color: #06d6a0;
+          border-color: rgba(6, 214, 160, 0.25);
         }
         .lesson-name {
           flex: 1;
-          font-weight: 500;
+          font-family: 'General Sans', sans-serif;
+          font-weight: 600;
+          line-height: 1.4;
+          word-break: break-word;
+          overflow-wrap: break-word;
+          color: #e2e8f0;
+        }
+        .lesson-interactive-item:hover .lesson-name {
+          color: #ffffff;
         }
         .lesson-arrow {
           font-size: 0.85rem;
-          color: var(--color-accent-cyan);
+          color: #06d6a0;
+          margin-left: 4px;
+          display: inline-block;
+          transition: transform 0.2s ease;
+        }
+        .lesson-interactive-item:hover .lesson-arrow {
+          transform: translateX(3px);
         }
         .module-footer-actions {
           display: flex;
@@ -693,50 +713,83 @@ function LearnContentComponent() {
         }
         .step-nav-btn {
           display: flex;
-          align-items: center;
-          gap: 0.65rem;
-          padding: 0.65rem 0.85rem;
-          border-radius: 8px;
-          background: var(--color-bg-input);
-          border: 1px solid transparent;
+          align-items: flex-start;
+          gap: 0.75rem;
+          padding: 0.85rem 1rem;
+          border-radius: 10px;
+          background: var(--color-bg-input, #0f1420);
+          border: 1px solid rgba(255, 255, 255, 0.07);
           cursor: pointer;
           text-align: left;
-          transition: all 0.2s;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          width: 100%;
+          box-sizing: border-box;
         }
         .step-nav-btn:hover {
           background: rgba(6, 214, 160, 0.06);
-          color: var(--color-text-primary);
+          border-color: rgba(6, 214, 160, 0.25);
+          transform: translateX(2px);
         }
         .step-nav-btn.active {
-          background: rgba(6, 214, 160, 0.14);
-          border-color: var(--color-accent-cyan);
+          background: rgba(6, 214, 160, 0.12);
+          border-color: var(--color-accent-cyan, #06d6a0);
+          box-shadow: 0 4px 14px rgba(6, 214, 160, 0.15);
         }
         .step-idx {
-          font-family: var(--font-mono);
-          font-size: 0.75rem;
+          width: 28px;
+          min-width: 28px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          font-family: var(--font-mono, 'JetBrains Mono', monospace);
+          font-size: 0.78rem;
           font-weight: 700;
-          color: var(--color-accent-cyan);
+          color: var(--color-accent-cyan, #06d6a0);
+          background: rgba(6, 214, 160, 0.12);
+          border: 1px solid rgba(6, 214, 160, 0.25);
+          border-radius: 6px;
+          margin-top: 1px;
         }
         .step-text-wrap {
           flex: 1;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
         }
         .step-title {
           display: block;
-          font-size: 0.85rem;
-          font-weight: 600;
-          color: var(--color-text-primary);
+          font-family: 'General Sans', sans-serif;
+          font-size: 0.88rem;
+          font-weight: 700;
+          line-height: 1.35;
+          color: #f1f5f9;
+          word-break: break-word;
+          overflow-wrap: break-word;
         }
         .step-desc-preview {
           display: block;
-          font-size: 0.72rem;
-          color: var(--color-text-muted);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
+          font-family: 'General Sans', sans-serif;
+          font-size: 0.76rem;
+          font-weight: 400;
+          line-height: 1.45;
+          color: #94a3b8;
+          word-break: break-word;
+          overflow-wrap: break-word;
+          white-space: normal;
         }
         .step-arrow-mark {
-          font-size: 0.85rem;
-          color: var(--color-accent-cyan);
+          font-size: 0.88rem;
+          color: var(--color-accent-cyan, #06d6a0);
+          flex-shrink: 0;
+          margin-left: auto;
+          align-self: center;
+          transition: transform 0.2s ease;
+        }
+        .step-nav-btn:hover .step-arrow-mark {
+          transform: translateX(3px);
         }
 
         /* Detail content */
@@ -922,6 +975,8 @@ function LearnContentComponent() {
         }
         .peri-card-actions {
           margin-top: auto;
+        @media (max-width: 1024px) {
+          .lesson-items-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
 
         @media (max-width: 900px) {
@@ -929,6 +984,11 @@ function LearnContentComponent() {
           .proto-selector-bar { grid-template-columns: 1fr; }
           .proto-workspace-grid { grid-template-columns: 1fr; }
           .path-header-card { flex-direction: column; align-items: flex-start; }
+        }
+
+        @media (max-width: 640px) {
+          .lesson-items-grid { grid-template-columns: 1fr; }
+          .lesson-interactive-item { min-height: auto; }
         }
       `}</style>
     </div>

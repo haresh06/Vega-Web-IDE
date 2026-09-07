@@ -20,13 +20,14 @@
 #include <WiFi.h>
 #include <WebServer.h>
 #include <LittleFS.h>
+#include <ESPmDNS.h>
 #include <mbedtls/sha256.h>
 
 // ============================================================================
 // CONFIGURATION: Set your Wi-Fi credentials here
 // ============================================================================
-const char* WIFI_SSID     = "YOUR_WIFI_SSID";
-const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+const char* WIFI_SSID     = "vivo";
+const char* WIFI_PASSWORD = "9952100318";
 
 // Fallback SoftAP settings (active if Wi-Fi connection fails or not configured)
 const char* AP_SSID       = "VEGA-ESP32-GATEWAY";
@@ -303,6 +304,16 @@ void setup() {
     Serial.printf("[Wi-Fi AP] SSID: %s | Pass: %s\n", AP_SSID, AP_PASSWORD);
     Serial.print("[Wi-Fi AP] IP Address: http://");
     Serial.println(WiFi.softAPIP());
+  }
+
+  // Start mDNS Responder (advertises http://vega-esp32.local on LAN)
+  if (MDNS.begin("vega-esp32")) {
+    Serial.println("[mDNS] Responder active at http://vega-esp32.local");
+    MDNS.addService("http", "tcp", 80);
+    MDNS.addServiceTxt("http", "tcp", "board", "vega-aries-v2");
+    MDNS.addServiceTxt("http", "tcp", "type", "firmware-gateway");
+  } else {
+    Serial.println("[mDNS] Warning: Failed to start mDNS responder.");
   }
 
   // Collect custom request headers
