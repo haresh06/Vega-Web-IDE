@@ -2,10 +2,12 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { Plus, X, Edit2, FileCode, FileText, RotateCw } from 'lucide-react';
+import { Plus, X, Edit2, FileCode, FileText, RotateCw, Usb, Wifi } from 'lucide-react';
 import { checkEsp32Status, uploadFirmwareToEsp32 } from '@/lib/esp32/wifi-flasher';
 import { discoverEsp32, checkEsp32Health, DiscoveredEsp32 } from '@/lib/esp32/discovery';
 import VegaLabSetupCard from '@/components/ide/VegaLabSetupCard';
+import { WebSerialConnection, isWebSerialSupported } from '@/lib/serial/web-serial';
+import { VegaUsbFlasher } from '@/lib/serial/vega-usb-flasher';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
@@ -180,6 +182,11 @@ export default function IDEPage() {
   const [renamingFile, setRenamingFile] = useState<string | null>(null);
   const [renameInput, setRenameInput] = useState('');
   const renameInputRef = useRef<HTMLInputElement>(null);
+
+  // Flash Target state: 'ota' (default) or 'usb'
+  const [flashTarget, setFlashTarget] = useState<'ota' | 'usb'>('ota');
+  const [usbConnected, setUsbConnected] = useState(false);
+  const webSerialRef = useRef<WebSerialConnection | null>(null);
 
   // Build & Flash states
   const [buildStatus, setBuildStatus] = useState<BuildStatus>('idle');
@@ -803,6 +810,106 @@ export default function IDEPage() {
     }
   };
 
+  // --------------------------------------------------------------------------
+  // DIRECT USB FLASHING (WEB SERIAL + XMODEM-CRC TO VEGA ARIES v2)
+  // --------------------------------------------------------------------------
+  const handleConnectUsb = async () => {
+    if (!isWebSerialSupported()) {
+      alert('Direct USB flashing requires Chrome, Edge, or an Opera browser with Web Serial API support.');
+      return;
+    }
+    try {
+      if (!webSerialRef.current) {
+        webSerialRef.current = new WebSerialConnection();
+      }
+      await webSerialRef.current.requestAndOpen(115200);
+      setUsbConnected(true);
+      addFlashLog('✓ VEGA USB Serial port connected at 115200 baud.');
+    } catch (err: unknown) {
+      const error = err as Error;
+      if (error.name !== 'NotFoundError') {
+        addFlashLog(`❌ USB Connection Error: ${error.message}`);
+      }
+    }
+  };
+
+  const handleUsbFlash = async () => {
+    if (!binaryBase64 || firmwareSize === 0) {
+      setActivePanel('build');
+      setBuildLog([]);
+      addFlashLog('❌ ERROR: No compiled firmware available');
+      addFlashLog('   Cannot flash — please compile your code first.');
+      addFlashLog('');
+      addFlashLog('   To fix:');
+      addFlashLog('   1. Click BUILD to compile your code first');
+      addFlashLog('   2. Verify that build completes with "BUILD SUCCESSFUL"');
+      addFlashLog('   3. Then click FLASH to flash VEGA directly via USB');
+      return;
+    }
+
+    if (!isWebSerialSupported()) {
+      alert('Direct USB flashing requires Chrome, Edge, or an Opera browser with Web Serial API support.');
+      return;
+    }
+
+    setFlashStatus('connecting');
+    setFlashProgress(0);
+    setActivePanel('flash');
+    setBuildLog([]);
+
+    addFlashLog('▶ Starting Direct USB Flash sequence...');
+    addFlashLog(`  Target:       VEGA ARIES v2 (THEJAS32 RISC-V)`);
+    addFlashLog(`  Transport:    Direct USB (Web Serial @ 115200 baud, 8N1)`);
+    addFlashLog(`  Firmware:     VEGA_ARIES_v2_TEST.bin (${(firmwareSize / 1024).toFixed(2)} KB)`);
+    addFlashLog(`  Checksum:     ${buildChecksum}`);
+    addFlashLog('');
+
+    try {
+      if (!webSerialRef.current) {
+        webSerialRef.current = new WebSerialConnection();
+      }
+
+      if (!webSerialRef.current.connected) {
+        addFlashLog('Prompting for VEGA USB Serial port...');
+        await webSerialRef.current.requestAndOpen(115200);
+        setUsbConnected(true);
+        addFlashLog('✓ Serial port opened at 115200 baud.');
+      }
+
+      setFlashStatus('flashing');
+      const flasher = new VegaUsbFlasher(webSerialRef.current);
+
+      await flasher.flashBinary(binaryBase64, {
+        onLog: (msg) => {
+          addFlashLog(msg);
+        },
+        onStageChange: (stage) => {
+          // stage update if needed
+        },
+        onProgress: (p) => {
+          setFlashProgress(p.percent);
+        },
+      });
+
+      setFlashProgress(100);
+      setFlashStatus('success');
+    } catch (err: unknown) {
+      const error = err as Error;
+      setFlashStatus('failed');
+      flashError(
+        'Direct USB Flash Failed',
+        [
+          error.message || 'An error occurred during USB XMODEM flashing.',
+        ],
+        [
+          'Ensure the VEGA board is connected to your PC with the Type-B USB cable',
+          'Check that no other application (e.g. Arduino IDE or Serial Monitor) is holding the COM port',
+          'Try pressing the RESET button on the VEGA board and retry flashing',
+        ]
+      );
+    }
+  };
+
   const handleSerialConnect = () => {
     if (serialConnected) {
       setSerialConnected(false);
@@ -854,43 +961,100 @@ export default function IDEPage() {
           <span className="toolbar-project">LED_Blink</span>
         </div>
         <div className="toolbar-actions">
-          <div
-            className={`esp32-status-pill ${discoveryStatus}`}
-            title={
-              discoveryStatus === 'connected'
-                ? `ESP32-S3 Online (${discoveredDevice?.ip}) • Discovered via ${discoveredDevice?.source?.toUpperCase() || 'mDNS'}`
-                : discoveryStatus === 'searching'
-                ? 'Searching for ESP32 on local network via mDNS...'
-                : 'ESP32 not found on network. Click 🔄 to retry.'
-            }
-          >
-            <span className="ip-label">📡 ESP32:</span>
-            {discoveryStatus === 'searching' && (
-              <span className="esp32-state-text searching">Searching...</span>
-            )}
-            {discoveryStatus === 'connected' && (
-              <span className="esp32-state-text connected">
-                <span className="live-dot" />
-                {discoveredDevice?.ip || 'Connected'}
-              </span>
-            )}
-            {discoveryStatus === 'not_found' && (
-              <span className="esp32-state-text not-found">Not Found</span>
-            )}
+          {/* Flash Target Toggle: Wi-Fi / OTA (Default) vs USB Direct */}
+          <div className="flash-target-toggle" role="group" aria-label="Flash Target">
             <button
               type="button"
-              className={`esp32-rescan-btn ${discoveryStatus === 'searching' ? 'spinning' : ''}`}
-              onClick={() => runDiscovery(true)}
-              title="Rescan for ESP32 on network"
+              className={`target-btn ${flashTarget === 'ota' ? 'active' : ''}`}
+              onClick={() => setFlashTarget('ota')}
+              title="Wireless Flashing via ESP32 Gateway"
             >
-              <RotateCw size={11} />
+              <Wifi size={12} />
+              <span>Wi-Fi / OTA</span>
+            </button>
+            <button
+              type="button"
+              className={`target-btn ${flashTarget === 'usb' ? 'active' : ''}`}
+              onClick={() => setFlashTarget('usb')}
+              title="Direct USB Flashing via Type-B Cable (Web Serial)"
+            >
+              <Usb size={12} />
+              <span>USB Direct</span>
             </button>
           </div>
+
+          {/* If OTA is selected, show ESP32 Discovery status pill */}
+          {flashTarget === 'ota' && (
+            <div
+              className={`esp32-status-pill ${discoveryStatus}`}
+              title={
+                discoveryStatus === 'connected'
+                  ? `ESP32-S3 Online (${discoveredDevice?.ip}) • Discovered via ${discoveredDevice?.source?.toUpperCase() || 'mDNS'}`
+                  : discoveryStatus === 'searching'
+                  ? 'Searching for ESP32 on local network via mDNS...'
+                  : 'ESP32 not found on network. Click 🔄 to retry.'
+              }
+            >
+              <span className="ip-label">📡 ESP32:</span>
+              {discoveryStatus === 'searching' && (
+                <span className="esp32-state-text searching">Searching...</span>
+              )}
+              {discoveryStatus === 'connected' && (
+                <span className="esp32-state-text connected">
+                  <span className="live-dot" />
+                  {discoveredDevice?.ip || 'Connected'}
+                </span>
+              )}
+              {discoveryStatus === 'not_found' && (
+                <span className="esp32-state-text not-found">Not Found</span>
+              )}
+              <button
+                type="button"
+                className={`esp32-rescan-btn ${discoveryStatus === 'searching' ? 'spinning' : ''}`}
+                onClick={() => runDiscovery(true)}
+                title="Rescan for ESP32 on network"
+              >
+                <RotateCw size={11} />
+              </button>
+            </div>
+          )}
+
+          {/* If USB Direct is selected, show USB Serial status pill & J12 reminder */}
+          {flashTarget === 'usb' && (
+            <>
+              <div
+                className={`usb-status-pill ${usbConnected ? 'connected' : 'disconnected'}`}
+                title={usbConnected ? 'VEGA USB Serial Port Connected (115200 baud)' : 'Click to select / connect VEGA USB Serial port'}
+                onClick={!usbConnected ? handleConnectUsb : undefined}
+              >
+                <Usb size={12} />
+                <span className="usb-label">USB:</span>
+                <span className={`usb-state-text ${usbConnected ? 'connected' : 'disconnected'}`}>
+                  {usbConnected ? (
+                    <>
+                      <span className="live-dot" />
+                      Connected
+                    </>
+                  ) : (
+                    'Connect'
+                  )}
+                </span>
+              </div>
+              <div className="j12-notice" title="Hardware Requirement: Ensure J12 (BOOT-SEL) jumper is SHORTED for permanent SPI Flash programming.">
+                <span className="j12-badge">J12: SHORTED</span>
+              </div>
+            </>
+          )}
+
           <button className="toolbar-btn" onClick={handleBuild} disabled={buildStatus === 'building'}>
             {buildStatus === 'building' ? '⏳ Building...' : '🔨 Build'}
           </button>
-          <button className="toolbar-btn" onClick={handleFlash} disabled={flashStatus === 'flashing'}>
-            📶 Flash
+          <button
+            className={`toolbar-btn ${flashStatus === 'flashing' ? 'active' : ''}`}
+            onClick={flashTarget === 'usb' ? handleUsbFlash : handleFlash}
+            disabled={flashStatus === 'flashing'}
+          >
+            {flashTarget === 'usb' ? '⚡ Flash USB' : '📶 Flash OTA'}
           </button>
           <button className={`toolbar-btn ${serialConnected ? 'active' : ''}`} onClick={handleSerialConnect}>
             {serialConnected ? '🟢 Serial' : '⚪ Serial'}
@@ -1205,6 +1369,101 @@ export default function IDEPage() {
           border-radius: 4px;
         }
         .toolbar-actions { display: flex; align-items: center; gap: 0.5rem; }
+
+        /* Flash Target Toggle */
+        .flash-target-toggle {
+          display: flex;
+          align-items: center;
+          background: var(--color-bg-input);
+          border: 1px solid var(--color-border);
+          border-radius: 6px;
+          padding: 2px;
+          gap: 2px;
+        }
+        .target-btn {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 0.2rem 0.55rem;
+          font-size: 0.72rem;
+          font-weight: 600;
+          color: var(--color-text-muted);
+          background: transparent;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+        .target-btn:hover {
+          color: var(--color-text-primary);
+        }
+        .target-btn.active {
+          background: rgba(56, 189, 248, 0.15);
+          color: var(--color-accent-cyan);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        /* USB Status Pill */
+        .usb-status-pill {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+          background: var(--color-bg-input);
+          border: 1px solid var(--color-border);
+          border-radius: 6px;
+          padding: 0.22rem 0.55rem;
+          font-size: 0.76rem;
+          font-family: var(--font-mono, monospace);
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .usb-status-pill.connected {
+          border-color: rgba(6, 214, 160, 0.4);
+          background: rgba(6, 214, 160, 0.06);
+          cursor: default;
+        }
+        .usb-status-pill.disconnected:hover {
+          border-color: var(--color-accent-cyan);
+          background: rgba(56, 189, 248, 0.08);
+        }
+        .usb-label {
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: var(--color-accent-cyan);
+          white-space: nowrap;
+        }
+        .usb-state-text {
+          font-weight: 600;
+          font-size: 0.74rem;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+        .usb-state-text.connected {
+          color: var(--color-success, #06d6a0);
+        }
+        .usb-state-text.disconnected {
+          color: var(--color-accent-cyan, #38bdf8);
+          text-decoration: underline;
+        }
+
+        /* J12 Hardware Jumper Reminder */
+        .j12-notice {
+          display: flex;
+          align-items: center;
+          background: rgba(56, 189, 248, 0.08);
+          border: 1px solid rgba(56, 189, 248, 0.25);
+          border-radius: 6px;
+          padding: 0.2rem 0.5rem;
+          font-size: 0.7rem;
+          font-family: var(--font-mono, monospace);
+        }
+        .j12-badge {
+          color: var(--color-accent-cyan, #38bdf8);
+          font-weight: 700;
+          letter-spacing: 0.02em;
+        }
+
         .esp32-status-pill {
           display: flex;
           align-items: center;
