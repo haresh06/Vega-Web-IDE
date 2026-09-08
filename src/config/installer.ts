@@ -9,11 +9,8 @@
  * When set to "REPLACE_WITH_INSTALLER_URL" or empty, it automatically resolves
  * to the bundled website download path "/downloads/VEGA-Lab-Setup.exe".
  */
-export const VEGA_INSTALLER_URL = "REPLACE_WITH_INSTALLER_URL";
+export const VEGA_INSTALLER_URL = "https://github.com/haresh06/Vega-Web-IDE/releases/download/v1.0.0/VEGA-Lab-Setup.exe";
 
 export function getVegaInstallerUrl(): string {
-  if (!VEGA_INSTALLER_URL || VEGA_INSTALLER_URL === "REPLACE_WITH_INSTALLER_URL") {
-    return "/downloads/VEGA-Lab-Setup.exe";
-  }
   return VEGA_INSTALLER_URL;
 }
