@@ -457,7 +457,7 @@ export default function IDEPage() {
   // MULTI-FILE BUILD COMPILATION & LINKING (LOCAL VEGA HELPER)
   // --------------------------------------------------------------------------
   const handleBuild = async () => {
-    const COMPILER_HELPER_URL = 'http://127.0.0.1:4000';
+    const CANDIDATE_HELPER_URLS = ['http://127.0.0.1:4000', 'http://localhost:4000'];
 
     setBuildStatus('building');
     setActivePanel('build');
@@ -484,48 +484,37 @@ export default function IDEPage() {
     }
 
     try {
-      // Step 1: Health check on local VEGA compiler helper
+      // Step 1: Probe local VEGA compiler helper
+      let activeHelperUrl = CANDIDATE_HELPER_URLS[0];
       let isHealthy = false;
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3500);
 
-        const healthRes = await fetch(`${COMPILER_HELPER_URL}/health`, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' },
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
+      for (const candidate of CANDIDATE_HELPER_URLS) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-        if (healthRes.ok) {
-          const healthData = await healthRes.json();
-          if (
-            healthData &&
-            healthData.status === 'ok' &&
-            healthData.compiler === true &&
-            healthData.objcopy === true &&
-            healthData.linker === true &&
-            healthData.core === true
-          ) {
-            isHealthy = true;
+          const healthRes = await fetch(`${candidate}/health`, {
+            method: 'GET',
+            mode: 'cors',
+            headers: { 'Accept': 'application/json' },
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+
+          if (healthRes.ok) {
+            const healthData = await healthRes.json();
+            if (
+              healthData &&
+              (healthData.status === 'ok' || healthData.status === 'online' || healthData.compiler !== false)
+            ) {
+              activeHelperUrl = candidate;
+              isHealthy = true;
+              break;
+            }
           }
+        } catch {
+          // Probe next candidate URL
         }
-      } catch {
-        isHealthy = false;
-      }
-
-      if (!isHealthy) {
-        setBuildStatus('failed');
-        setBinaryBase64(null);
-        addFlashLog('');
-        addFlashLog('❌ BUILD FAILED: VEGA Compiler Helper is not running. Please install or start VEGA Lab Compiler.');
-        addFlashLog('');
-        addFlashLog('   Troubleshooting:');
-        addFlashLog('   1. Download and run VEGA Lab Compiler installer:');
-        addFlashLog('      🔗 Download: /downloads/VEGA-Lab-Setup.exe');
-        addFlashLog('   2. Verify the local compiler helper service is active at http://127.0.0.1:4000.');
-        addFlashLog('   3. If newly installed, make sure the service has started.');
-        return;
       }
 
       // Step 2: Prepare project files payload
@@ -536,16 +525,53 @@ export default function IDEPage() {
 
       const activeContent = files[activeFile]?.content || '';
 
-      // Step 3: Send compile request to local helper
-      const response = await fetch(`${COMPILER_HELPER_URL}/compile`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          files: filesPayload,
-          activeFile: activeFile,
-          code: activeContent,
-        }),
-      });
+      // Step 3: Send compile request to local helper (attempt active or fallback candidate)
+      let response: Response | null = null;
+      let lastCompileErr: Error | null = null;
+
+      const urlsToTry = isHealthy
+        ? [activeHelperUrl]
+        : CANDIDATE_HELPER_URLS;
+
+      for (const targetUrl of urlsToTry) {
+        try {
+          response = await fetch(`${targetUrl}/compile`, {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+              files: filesPayload,
+              activeFile: activeFile,
+              code: activeContent,
+            }),
+          });
+          if (response) {
+            activeHelperUrl = targetUrl;
+            break;
+          }
+        } catch (err: unknown) {
+          lastCompileErr = err as Error;
+        }
+      }
+
+      if (!response) {
+        setBuildStatus('failed');
+        setBinaryBase64(null);
+        addFlashLog('');
+        addFlashLog('❌ BUILD FAILED: VEGA Compiler Helper is not running. Please install or start VEGA Lab Compiler.');
+        addFlashLog('');
+        addFlashLog('   Troubleshooting:');
+        addFlashLog('   1. Verify VEGA Lab Compiler is running on your PC (http://127.0.0.1:4000).');
+        addFlashLog('   2. Download and install VEGA Lab Setup:');
+        addFlashLog('      🔗 Download: /downloads/VEGA-Lab-Setup.exe');
+        if (lastCompileErr) {
+          addFlashLog(`   3. Details: ${lastCompileErr.message || 'Connection refused or blocked by browser'}`);
+        }
+        return;
+      }
 
       const data = await response.json();
 
