@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { Plus, X, Edit2, FileCode, FileText, RotateCw, Usb, Wifi } from 'lucide-react';
 import { checkEsp32Status, uploadFirmwareToEsp32 } from '@/lib/esp32/wifi-flasher';
-import { discoverEsp32, checkEsp32Health, DiscoveredEsp32 } from '@/lib/esp32/discovery';
+import { discoverEsp32, checkEsp32Health, probeEsp32Endpoint, DiscoveredEsp32 } from '@/lib/esp32/discovery';
 import VegaLabSetupCard from '@/components/ide/VegaLabSetupCard';
 import { WebSerialConnection, isWebSerialSupported } from '@/lib/serial/web-serial';
 import { VegaUsbFlasher } from '@/lib/serial/vega-usb-flasher';
@@ -169,6 +169,8 @@ export default function IDEPage() {
   // ESP32 Automatic Discovery & Dynamic IP States
   const [discoveryStatus, setDiscoveryStatus] = useState<'searching' | 'connected' | 'not_found'>('searching');
   const [discoveredDevice, setDiscoveredDevice] = useState<DiscoveredEsp32 | null>(null);
+  const [manualEsp32Ip, setManualEsp32Ip] = useState('');
+  const [isConnectingIp, setIsConnectingIp] = useState(false);
   const isDiscoveringRef = useRef(false);
   const healthFailCountRef = useRef(0);
 
@@ -203,18 +205,29 @@ export default function IDEPage() {
   const terminalRef = useRef<HTMLDivElement>(null);
 
   // --------------------------------------------------------------------------
-  // AUTOMATIC ESP32-S3 IP DISCOVERY
+  // AUTOMATIC ESP32-S3 IP DISCOVERY & DIRECT IP CONNECTION
   // --------------------------------------------------------------------------
-  const runDiscovery = useCallback(async (isManual = false) => {
+  const runDiscovery = useCallback(async (isManual = false, overrideIp?: string) => {
     if (isDiscoveringRef.current) return;
     isDiscoveringRef.current = true;
     setDiscoveryStatus('searching');
 
     try {
-      const result = await discoverEsp32();
+      let candidateIp = overrideIp || manualEsp32Ip;
+      if (!candidateIp && typeof window !== 'undefined') {
+        try {
+          candidateIp = localStorage.getItem('vega_ide_esp32_ip') || '';
+        } catch {}
+      }
+
+      const result = await discoverEsp32(candidateIp);
       if (result.discovered && result.ip) {
         setDiscoveredDevice(result);
         setDiscoveryStatus('connected');
+        setManualEsp32Ip(result.ip);
+        try {
+          localStorage.setItem('vega_ide_esp32_ip', result.ip);
+        } catch {}
         healthFailCountRef.current = 0;
       } else {
         setDiscoveredDevice(null);
@@ -226,7 +239,58 @@ export default function IDEPage() {
     } finally {
       isDiscoveringRef.current = false;
     }
-  }, []);
+  }, [manualEsp32Ip]);
+
+  const handleConnectEsp32Ip = async (ipToTest?: string) => {
+    const target = (ipToTest || manualEsp32Ip).trim();
+    if (!target) {
+      runDiscovery(true);
+      return;
+    }
+    setIsConnectingIp(true);
+    setDiscoveryStatus('searching');
+    try {
+      localStorage.setItem('vega_ide_esp32_ip', target);
+    } catch {}
+
+    try {
+      const directResult = await probeEsp32Endpoint(target, 2500);
+      if (directResult && directResult.discovered && directResult.ip) {
+        setDiscoveredDevice(directResult);
+        setDiscoveryStatus('connected');
+        setManualEsp32Ip(directResult.ip);
+        try {
+          localStorage.setItem('vega_ide_esp32_ip', directResult.ip);
+        } catch {}
+        healthFailCountRef.current = 0;
+        addFlashLog(`✓ ESP32-S3 Gateway connected at ${directResult.ip}`);
+      } else {
+        // Fall back to full discovery pipeline using target as preferred candidate
+        const discResult = await discoverEsp32(target);
+        if (discResult.discovered && discResult.ip) {
+          setDiscoveredDevice(discResult);
+          setDiscoveryStatus('connected');
+          setManualEsp32Ip(discResult.ip);
+          try {
+            localStorage.setItem('vega_ide_esp32_ip', discResult.ip);
+          } catch {}
+          healthFailCountRef.current = 0;
+          addFlashLog(`✓ ESP32-S3 Gateway connected at ${discResult.ip}`);
+        } else {
+          setDiscoveredDevice(null);
+          setDiscoveryStatus('not_found');
+          addFlashLog(`❌ Could not connect to ESP32 at ${target}/status`);
+        }
+      }
+    } catch (err: unknown) {
+      setDiscoveredDevice(null);
+      setDiscoveryStatus('not_found');
+      const msg = (err as Error).message || 'Connection failed';
+      addFlashLog(`❌ ESP32 connection error: ${msg}`);
+    } finally {
+      setIsConnectingIp(false);
+    }
+  };
 
   // Initial automatic discovery on mount
   useEffect(() => {
@@ -261,9 +325,11 @@ export default function IDEPage() {
   // --------------------------------------------------------------------------
   useEffect(() => {
     try {
-      // Clean up any obsolete stored IP keys so stale DHCP IPs are never retained
-      localStorage.removeItem('vega_ide_esp32_ip_v2');
-      localStorage.removeItem('vega_ide_esp32_ip');
+      // Restore saved ESP32 IP if previously saved
+      const savedEsp32Ip = localStorage.getItem('vega_ide_esp32_ip');
+      if (savedEsp32Ip) {
+        setManualEsp32Ip(savedEsp32Ip);
+      }
 
       const savedFilesStr = localStorage.getItem(STORAGE_KEY_FILES);
       const savedActiveFile = localStorage.getItem(STORAGE_KEY_ACTIVE);
@@ -525,10 +591,10 @@ export default function IDEPage() {
       }
 
       // Step 2: Prepare project files payload
-      const filesPayload: Record<string, string> = {};
-      for (const [filename, fileObj] of Object.entries(files)) {
-        filesPayload[filename] = fileObj.content;
-      }
+      const filesArray = Object.entries(files).map(([name, fileObj]) => ({
+        name,
+        content: fileObj.content,
+      }));
 
       const activeContent = files[activeFile]?.content || '';
 
@@ -550,7 +616,7 @@ export default function IDEPage() {
               'Accept': 'application/json',
             },
             body: JSON.stringify({
-              files: filesPayload,
+              files: filesArray,
               activeFile: activeFile,
               code: activeContent,
             }),
@@ -672,14 +738,22 @@ export default function IDEPage() {
     }
 
     let targetAddress = discoveredDevice?.address || (discoveredDevice?.ip ? `http://${discoveredDevice.ip}` : '');
+    if (!targetAddress && manualEsp32Ip.trim()) {
+      const trimmed = manualEsp32Ip.trim();
+      targetAddress = trimmed.startsWith('http://') || trimmed.startsWith('https://') ? trimmed : `http://${trimmed}`;
+    }
 
     // If not currently discovered, attempt quick discovery before failing
     if (!targetAddress) {
-      addFlashLog('▶ Scanning for VEGA ESP32 on local network via mDNS...');
-      const quickDisc = await discoverEsp32();
+      addFlashLog('▶ Scanning for VEGA ESP32 on local network...');
+      const quickDisc = await discoverEsp32(manualEsp32Ip);
       if (quickDisc.discovered && quickDisc.ip) {
         setDiscoveredDevice(quickDisc);
         setDiscoveryStatus('connected');
+        setManualEsp32Ip(quickDisc.ip);
+        try {
+          localStorage.setItem('vega_ide_esp32_ip', quickDisc.ip);
+        } catch {}
         targetAddress = quickDisc.address || `http://${quickDisc.ip}`;
       } else {
         setActivePanel('flash');
@@ -976,36 +1050,53 @@ export default function IDEPage() {
             </button>
           </div>
 
-          {/* If OTA is selected, show ESP32 Discovery status pill */}
+          {/* If OTA is selected, show ESP32 Gateway IP input + status */}
           {flashTarget === 'ota' && (
             <div
               className={`esp32-status-pill ${discoveryStatus}`}
               title={
                 discoveryStatus === 'connected'
-                  ? `ESP32-S3 Online (${discoveredDevice?.ip}) • Discovered via ${discoveredDevice?.source?.toUpperCase() || 'mDNS'}`
+                  ? `ESP32-S3 Online (${discoveredDevice?.ip || manualEsp32Ip}) • Discovered via ${discoveredDevice?.source?.toUpperCase() || 'DIRECT/IP'}`
                   : discoveryStatus === 'searching'
-                  ? 'Searching for ESP32 on local network via mDNS...'
-                  : 'ESP32 not found on network. Click 🔄 to retry.'
+                  ? 'Connecting / Searching for ESP32 on network...'
+                  : 'ESP32 not found. Enter IP and click Connect or 🔄 to rescan.'
               }
             >
               <span className="ip-label">📡 ESP32:</span>
-              {discoveryStatus === 'searching' && (
-                <span className="esp32-state-text searching">Searching...</span>
-              )}
-              {discoveryStatus === 'connected' && (
-                <span className="esp32-state-text connected">
-                  <span className="live-dot" />
-                  {discoveredDevice?.ip || 'Connected'}
-                </span>
-              )}
-              {discoveryStatus === 'not_found' && (
-                <span className="esp32-state-text not-found">Not Found</span>
-              )}
+              <input
+                type="text"
+                className="esp32-ip-input"
+                value={manualEsp32Ip}
+                onChange={(e) => setManualEsp32Ip(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleConnectEsp32Ip();
+                }}
+                placeholder="e.g. 10.240.46.148"
+                title="Enter ESP32 IP address and press Enter to connect"
+              />
+              <button
+                type="button"
+                className={`esp32-connect-btn ${discoveryStatus === 'connected' ? 'connected' : ''}`}
+                onClick={() => handleConnectEsp32Ip()}
+                disabled={isConnectingIp}
+                title={discoveryStatus === 'connected' ? 'Connected (click to re-test)' : 'Connect to ESP32 IP'}
+              >
+                {isConnectingIp ? (
+                  <span className="esp32-state-text searching">Connecting...</span>
+                ) : discoveryStatus === 'connected' ? (
+                  <span className="esp32-state-text connected">
+                    <span className="live-dot" />
+                    Connected
+                  </span>
+                ) : (
+                  <span className="esp32-state-text connect-action">Connect</span>
+                )}
+              </button>
               <button
                 type="button"
                 className={`esp32-rescan-btn ${discoveryStatus === 'searching' ? 'spinning' : ''}`}
                 onClick={() => runDiscovery(true)}
-                title="Rescan for ESP32 on network"
+                title="Auto-scan network for ESP32"
               >
                 <RotateCw size={11} />
               </button>
@@ -1486,6 +1577,35 @@ export default function IDEPage() {
           color: var(--color-accent-cyan);
           white-space: nowrap;
         }
+        .esp32-ip-input {
+          background: rgba(0, 0, 0, 0.25);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 4px;
+          color: var(--color-text-primary);
+          font-family: var(--font-mono, monospace);
+          font-size: 0.74rem;
+          padding: 0.12rem 0.4rem;
+          width: 112px;
+          outline: none;
+          transition: all 0.2s;
+        }
+        .esp32-ip-input:focus {
+          border-color: var(--color-accent-cyan);
+          background: rgba(255, 255, 255, 0.05);
+        }
+        .esp32-connect-btn {
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          padding: 0.12rem 0.35rem;
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          transition: all 0.2s;
+        }
+        .esp32-connect-btn:hover {
+          background: rgba(255, 255, 255, 0.08);
+        }
         .esp32-state-text {
           font-weight: 600;
           font-size: 0.74rem;
@@ -1501,6 +1621,10 @@ export default function IDEPage() {
         }
         .esp32-state-text.not-found {
           color: var(--color-text-muted, #94a3b8);
+        }
+        .esp32-state-text.connect-action {
+          color: var(--color-accent-cyan, #38bdf8);
+          text-decoration: underline;
         }
         .live-dot {
           width: 6px;

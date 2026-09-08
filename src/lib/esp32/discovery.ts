@@ -135,11 +135,35 @@ async function probeServerDiscovery(timeoutMs = 3000): Promise<DiscoveredEsp32 |
 }
 
 /**
- * Main Automatic Discovery Function
- * Scans local mDNS, SoftAP, and Server helper concurrently to discover ESP32-S3
+ * Fast Health-Check / Ping of an existing discovered address
  */
-export async function discoverEsp32(): Promise<DiscoveredEsp32> {
-  // 1. Launch browser direct mDNS & AP probes in parallel with server-side discovery
+export async function probeEsp32Endpoint(baseUrl: string, timeoutMs = 2500): Promise<DiscoveredEsp32 | null> {
+  return probeEndpoint(baseUrl, timeoutMs);
+}
+
+/**
+ * Main Automatic Discovery Function
+ * Checks preferred/saved candidate IP first, then scans local mDNS, SoftAP, and Server helper concurrently
+ */
+export async function discoverEsp32(preferredIpOrUrl?: string): Promise<DiscoveredEsp32> {
+  // 1. Check preferred / saved IP first if provided or available in localStorage
+  let savedCandidate = preferredIpOrUrl?.trim();
+  if (!savedCandidate && typeof window !== 'undefined') {
+    try {
+      savedCandidate = localStorage.getItem('vega_ide_esp32_ip') || undefined;
+    } catch {
+      // localStorage may be unavailable in some security contexts
+    }
+  }
+
+  if (savedCandidate) {
+    const directResult = await probeEndpoint(savedCandidate, 2500);
+    if (directResult && directResult.discovered) {
+      return directResult;
+    }
+  }
+
+  // 2. Launch browser direct mDNS & AP probes in parallel with server-side discovery
   const probePromises: Promise<DiscoveredEsp32 | null>[] = [
     probeServerDiscovery(3000),
     ...MDNS_CANDIDATES.map((candidate) => probeEndpoint(candidate, 2500)),
@@ -170,3 +194,4 @@ export async function checkEsp32Health(address: string, timeoutMs = 2500): Promi
   const res = await probeEndpoint(address, timeoutMs);
   return res !== null && res.discovered;
 }
+
