@@ -1,6 +1,7 @@
 /* ========================================================
    VEGA LAB LEARNING CENTER — GLOBAL DESIGN SYSTEM
    Typography: General Sans • Code: JetBrains Mono
+   Dark Engineering & Technology Platform
 ======================================================== */
 
 .learn-page,
@@ -27,10 +28,10 @@
   font-family: 'General Sans', sans-serif;
   font-size: 1.55rem;
   font-weight: 800;
-  color: #06d6a0;
+  color: #38bdf8;
   margin: 2.75rem 0 1.1rem 0;
   padding-bottom: 0.65rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.12);
   letter-spacing: -0.01em;
 }
 
@@ -47,7 +48,7 @@
   font-family: 'General Sans', sans-serif;
   font-size: 1.08rem;
   font-weight: 700;
-  color: #38bdf8;
+  color: #7dd3fc;
   margin: 1.5rem 0 0.6rem 0;
 }
 
@@ -75,11 +76,11 @@
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-size: 0.86em;
   font-weight: 600;
-  background: rgba(6, 214, 160, 0.12);
-  color: #06d6a0;
+  background: rgba(56, 189, 248, 0.1);
+  color: #38bdf8;
   padding: 2px 7px;
   border-radius: 5px;
-  border: 1px solid rgba(6, 214, 160, 0.28);
+  border: 1px solid rgba(56, 189, 248, 0.25);
 }
 
 /* Links */
@@ -92,15 +93,15 @@
 }
 
 .lesson-link:hover {
-  color: #06d6a0;
+  color: #7dd3fc;
 }
 
 /* Callout Box */
 .lesson-callout {
   display: flex;
   margin: 1.75rem 0;
-  background: rgba(6, 214, 160, 0.06);
-  border-left: 4px solid #06d6a0;
+  background: rgba(14, 165, 233, 0.06);
+  border-left: 4px solid #38bdf8;
   border-radius: 0 10px 10px 0;
   padding: 1.15rem 1.4rem;
   color: #e2e8f0;
@@ -131,8 +132,8 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #06d6a0;
-  box-shadow: 0 0 6px rgba(6, 214, 160, 0.6);
+  background: #38bdf8;
+  box-shadow: 0 0 6px rgba(56, 189, 248, 0.5);
   flex-shrink: 0;
   position: relative;
   top: -2px;
@@ -164,9 +165,9 @@
   font-family: var(--font-mono, monospace);
   font-size: 0.78rem;
   font-weight: 800;
-  color: #06d6a0;
-  background: rgba(6, 214, 160, 0.12);
-  border: 1px solid rgba(6, 214, 160, 0.25);
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
   padding: 2px 7px;
   border-radius: 6px;
   flex-shrink: 0;
@@ -180,10 +181,10 @@
 .lesson-code-block-wrapper {
   margin: 1.85rem 0;
   border-radius: 12px;
-  background: #040813;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #030714;
+  border: 1px solid rgba(56, 189, 248, 0.12);
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .lesson-code-header {
@@ -191,8 +192,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.65rem 1.25rem;
-  background: #091024;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #070e22;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.1);
 }
 
 .lesson-code-lang {
@@ -208,8 +209,8 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(56, 189, 248, 0.15);
   color: #94a3b8;
   font-family: 'General Sans', sans-serif;
   font-size: 0.74rem;
@@ -221,9 +222,9 @@
 }
 
 .lesson-code-copy-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(56, 189, 248, 0.1);
   color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(56, 189, 248, 0.35);
 }
 
 .copy-icon-success {
@@ -246,8 +247,8 @@
   overflow-x: auto;
   margin: 1.85rem 0;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(56, 189, 248, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .lesson-table {
@@ -259,16 +260,16 @@
 
 .lesson-table th {
   padding: 0.85rem 1.15rem;
-  background: #091024;
-  color: #06d6a0;
+  background: #070e22;
+  color: #38bdf8;
   font-weight: 800;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.12);
   letter-spacing: 0.02em;
 }
 
 .lesson-table td {
   padding: 0.75rem 1.15rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   color: #cbd5e1;
 }
 
@@ -277,7 +278,7 @@
 }
 
 .lesson-table tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(56, 189, 248, 0.03);
 }
 
 /* ========================================================
@@ -296,8 +297,8 @@
   align-items: flex-start;
   gap: 0.65rem;
   padding: 0.85rem 1rem;
-  background: var(--color-bg-input, #0f1420);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--color-bg-input, #040816);
+  border: 1px solid rgba(56, 189, 248, 0.1);
   border-radius: 10px;
   text-decoration: none;
   color: #cbd5e1;
@@ -309,11 +310,11 @@
 }
 
 .lesson-interactive-item:hover {
-  background: rgba(6, 214, 160, 0.08);
-  border-color: rgba(6, 214, 160, 0.3);
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.3);
   color: #ffffff;
   transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
 .lesson-bullet {
@@ -335,15 +336,15 @@
   font-weight: 700;
   color: #64748b;
   line-height: 1.5;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.03);
   padding: 1px 4px;
   border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.1);
 }
 
 .lesson-interactive-item:hover .lesson-idx {
-  color: #06d6a0;
-  border-color: rgba(6, 214, 160, 0.25);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.3);
 }
 
 .lesson-name {
@@ -362,7 +363,7 @@
 
 .lesson-arrow {
   font-size: 0.85rem;
-  color: #06d6a0;
+  color: #38bdf8;
   margin-left: 4px;
   display: inline-block;
   transition: transform 0.2s ease;
@@ -403,8 +404,8 @@
   gap: 0.75rem !important;
   padding: 0.85rem 1rem !important;
   border-radius: 10px !important;
-  background: var(--color-bg-input, #0f1420) !important;
-  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  background: var(--color-bg-input, #040816) !important;
+  border: 1px solid rgba(56, 189, 248, 0.1) !important;
   cursor: pointer;
   text-align: left;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -413,15 +414,15 @@
 }
 
 .step-nav-btn:hover {
-  background: rgba(6, 214, 160, 0.06) !important;
-  border-color: rgba(6, 214, 160, 0.25) !important;
+  background: rgba(56, 189, 248, 0.06) !important;
+  border-color: rgba(56, 189, 248, 0.25) !important;
   transform: translateX(2px) !important;
 }
 
 .step-nav-btn.active {
-  background: rgba(6, 214, 160, 0.12) !important;
-  border-color: var(--color-accent-cyan, #06d6a0) !important;
-  box-shadow: 0 4px 14px rgba(6, 214, 160, 0.15) !important;
+  background: rgba(56, 189, 248, 0.12) !important;
+  border-color: var(--color-accent-cyan, #38bdf8) !important;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.15) !important;
 }
 
 .step-idx {
@@ -435,9 +436,9 @@
   font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
   font-size: 0.78rem !important;
   font-weight: 700 !important;
-  color: var(--color-accent-cyan, #06d6a0) !important;
-  background: rgba(6, 214, 160, 0.12) !important;
-  border: 1px solid rgba(6, 214, 160, 0.25) !important;
+  color: var(--color-accent-cyan, #38bdf8) !important;
+  background: rgba(56, 189, 248, 0.12) !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
   border-radius: 6px !important;
   margin-top: 1px !important;
 }
@@ -475,7 +476,7 @@
 
 .step-arrow-mark {
   font-size: 0.88rem !important;
-  color: var(--color-accent-cyan, #06d6a0) !important;
+  color: var(--color-accent-cyan, #38bdf8) !important;
   flex-shrink: 0 !important;
   margin-left: auto !important;
   align-self: center !important;
@@ -485,5 +486,3 @@
 .step-nav-btn:hover .step-arrow-mark {
   transform: translateX(3px) !important;
 }
-
-

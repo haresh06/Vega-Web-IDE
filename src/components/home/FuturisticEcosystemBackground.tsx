@@ -112,7 +112,7 @@ export default function FuturisticEcosystemBackground({
     // ========================================================================
     const globeParticles: Particle3D[] = [];
     const sphereRadius = Math.min(width * 0.32, 420);
-    const globeColorPalette = ['#06d6a0', '#38bdf8', '#818cf8', '#c084fc', '#4cc9f0', '#2dd4bf'];
+    const globeColorPalette = ['#38bdf8', '#0ea5e9', '#0284c7', '#7dd3fc', '#94a3b8', '#60a5fa'];
 
     // Latitude rings
     const latCount = 16;
@@ -138,10 +138,10 @@ export default function FuturisticEcosystemBackground({
           origX: x,
           origY: y,
           origZ: z,
-          size: Math.random() * 1.8 + 1.2,
+          size: Math.random() * 1.6 + 1.0,
           color: globeColorPalette[Math.floor(Math.random() * globeColorPalette.length)],
-          alpha: Math.random() * 0.45 + 0.35,
-          pulseSpeed: Math.random() * 0.03 + 0.015,
+          alpha: Math.random() * 0.35 + 0.25,
+          pulseSpeed: Math.random() * 0.025 + 0.01,
           pulsePhase: Math.random() * Math.PI * 2,
         });
       }
@@ -165,9 +165,9 @@ export default function FuturisticEcosystemBackground({
           origX: x,
           origY: y,
           origZ: z,
-          size: Math.random() * 2.0 + 1.2,
-          color: ringIdx === 0 ? '#06d6a0' : ringIdx === 1 ? '#38bdf8' : '#818cf8',
-          alpha: Math.random() * 0.4 + 0.3,
+          size: Math.random() * 1.8 + 1.0,
+          color: ringIdx === 0 ? '#38bdf8' : ringIdx === 1 ? '#0ea5e9' : '#0284c7',
+          alpha: Math.random() * 0.35 + 0.2,
           pulseSpeed: Math.random() * 0.02 + 0.01,
           pulsePhase: Math.random() * Math.PI * 2,
         });
@@ -178,18 +178,18 @@ export default function FuturisticEcosystemBackground({
     // 2. CONTINUOUS AMBIENT FLOATING TECH PARTICLES (Full Height)
     // ========================================================================
     const ambientParticles: AmbientParticle[] = [];
-    const particleCount = 75;
+    const particleCount = 70;
     for (let p = 0; p < particleCount; p++) {
       ambientParticles.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.25,
-        vy: -Math.random() * 0.4 - 0.15,
-        size: Math.random() * 2.4 + 1.0,
-        baseAlpha: Math.random() * 0.35 + 0.18,
-        alpha: Math.random() * 0.35 + 0.18,
+        vx: (Math.random() - 0.5) * 0.2,
+        vy: -Math.random() * 0.35 - 0.12,
+        size: Math.random() * 2.0 + 0.8,
+        baseAlpha: Math.random() * 0.28 + 0.12,
+        alpha: Math.random() * 0.28 + 0.12,
         color: globeColorPalette[p % globeColorPalette.length],
-        pulseSpeed: Math.random() * 0.025 + 0.01,
+        pulseSpeed: Math.random() * 0.02 + 0.01,
         pulsePhase: Math.random() * Math.PI * 2,
         depth: Math.random() * 0.6 + 0.4,
       });
@@ -199,7 +199,7 @@ export default function FuturisticEcosystemBackground({
     // 3. CIRCUIT TRACES & PULSING BUS NODES (RISC-V Hardware Feel)
     // ========================================================================
     const circuitTraces: CircuitTrace[] = [];
-    const traceCount = 18;
+    const traceCount = 16;
     for (let t = 0; t < traceCount; t++) {
       const startX = Math.random() * width;
       const startY = Math.random() * height;
@@ -213,8 +213,8 @@ export default function FuturisticEcosystemBackground({
         x3: startX + len1,
         y3: startY + len2,
         progress: Math.random(),
-        speed: Math.random() * 0.0035 + 0.0018,
-        color: t % 3 === 0 ? '#06d6a0' : t % 3 === 1 ? '#38bdf8' : '#818cf8',
+        speed: Math.random() * 0.003 + 0.0015,
+        color: t % 3 === 0 ? '#38bdf8' : t % 3 === 1 ? '#0ea5e9' : '#0284c7',
       });
     }
 
@@ -286,8 +286,8 @@ export default function FuturisticEcosystemBackground({
       ctx.clearRect(0, 0, width, height);
 
       // Parallax center shift
-      const parallaxShiftX = -normX * 32;
-      const parallaxShiftY = -normY * 22;
+      const parallaxShiftX = -normX * 28;
+      const parallaxShiftY = -normY * 18;
 
       // Globe center position (behind the top stats & feature cards)
       const globeCenterX = width * 0.5 + parallaxShiftX;
@@ -295,13 +295,13 @@ export default function FuturisticEcosystemBackground({
 
       // Continuous subtle rotation
       if (!isReducedMotion) {
-        rotationAngleY += 0.0022;
-        waveOffset += 0.006;
+        rotationAngleY += 0.002;
+        waveOffset += 0.005;
       }
 
       // Dynamic tilt based on mouse position
-      const currentRotX = rotationAngleX + normY * 0.18;
-      const currentRotY = rotationAngleY + normX * 0.25;
+      const currentRotX = rotationAngleX + normY * 0.15;
+      const currentRotY = rotationAngleY + normX * 0.22;
 
       const cosX = Math.cos(currentRotX);
       const sinX = Math.sin(currentRotX);
@@ -312,10 +312,10 @@ export default function FuturisticEcosystemBackground({
       // A. DRAW FLOWING CONTINUOUS ENERGY WAVES (Curved Bezier Streams)
       // ----------------------------------------------------------------------
       ctx.save();
-      const waveCount = 5;
+      const waveCount = 4;
       for (let w = 0; w < waveCount; w++) {
         ctx.beginPath();
-        const yBase = height * (0.08 + w * 0.22) + parallaxShiftY * (0.4 + w * 0.15);
+        const yBase = height * (0.1 + w * 0.24) + parallaxShiftY * (0.3 + w * 0.12);
         ctx.moveTo(0, yBase);
 
         const segments = 16;
@@ -323,11 +323,11 @@ export default function FuturisticEcosystemBackground({
 
         for (let s = 0; s <= segments; s++) {
           const currentX = s * segWidth;
-          const waveAmp = 34 + w * 14;
+          const waveAmp = 28 + w * 10;
           const currentY =
             yBase +
-            Math.sin(s * 0.42 + waveOffset * 1.4 + w * 1.3) * waveAmp +
-            Math.cos(s * 0.28 - waveOffset + w) * (waveAmp * 0.5);
+            Math.sin(s * 0.38 + waveOffset * 1.2 + w * 1.2) * waveAmp +
+            Math.cos(s * 0.25 - waveOffset + w) * (waveAmp * 0.4);
 
           if (s === 0) {
             ctx.moveTo(currentX, currentY);
@@ -335,32 +335,28 @@ export default function FuturisticEcosystemBackground({
             const prevX = (s - 1) * segWidth;
             const prevY =
               yBase +
-              Math.sin((s - 1) * 0.42 + waveOffset * 1.4 + w * 1.3) * waveAmp +
-              Math.cos((s - 1) * 0.28 - waveOffset + w) * (waveAmp * 0.5);
+              Math.sin((s - 1) * 0.38 + waveOffset * 1.2 + w * 1.2) * waveAmp +
+              Math.cos((s - 1) * 0.25 - waveOffset + w) * (waveAmp * 0.4);
             const cpX = (prevX + currentX) / 2;
             ctx.quadraticCurveTo(prevX, prevY, cpX, (prevY + currentY) / 2);
           }
         }
 
-        const waveGradient = ctx.createLinearGradient(0, yBase - 100, width, yBase + 100);
-        if (w % 3 === 0) {
-          waveGradient.addColorStop(0, 'rgba(6, 214, 160, 0.0)');
-          waveGradient.addColorStop(0.35, 'rgba(6, 214, 160, 0.18)');
-          waveGradient.addColorStop(0.7, 'rgba(56, 189, 248, 0.20)');
-          waveGradient.addColorStop(1, 'rgba(129, 140, 248, 0.0)');
-        } else if (w % 3 === 1) {
-          waveGradient.addColorStop(0, 'rgba(129, 140, 248, 0.0)');
-          waveGradient.addColorStop(0.4, 'rgba(129, 140, 248, 0.15)');
-          waveGradient.addColorStop(0.8, 'rgba(192, 132, 252, 0.18)');
-          waveGradient.addColorStop(1, 'rgba(247, 37, 133, 0.0)');
-        } else {
+        const waveGradient = ctx.createLinearGradient(0, yBase - 80, width, yBase + 80);
+        if (w % 2 === 0) {
           waveGradient.addColorStop(0, 'rgba(56, 189, 248, 0.0)');
-          waveGradient.addColorStop(0.5, 'rgba(6, 214, 160, 0.15)');
-          waveGradient.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+          waveGradient.addColorStop(0.35, 'rgba(56, 189, 248, 0.12)');
+          waveGradient.addColorStop(0.7, 'rgba(2, 132, 199, 0.14)');
+          waveGradient.addColorStop(1, 'rgba(14, 165, 233, 0.0)');
+        } else {
+          waveGradient.addColorStop(0, 'rgba(2, 132, 199, 0.0)');
+          waveGradient.addColorStop(0.4, 'rgba(14, 165, 233, 0.10)');
+          waveGradient.addColorStop(0.8, 'rgba(56, 189, 248, 0.12)');
+          waveGradient.addColorStop(1, 'rgba(2, 132, 199, 0.0)');
         }
 
         ctx.strokeStyle = waveGradient;
-        ctx.lineWidth = 1.8;
+        ctx.lineWidth = 1.4;
         ctx.stroke();
       }
       ctx.restore();
@@ -371,16 +367,16 @@ export default function FuturisticEcosystemBackground({
       ctx.save();
       circuitTraces.forEach((trace) => {
         ctx.beginPath();
-        ctx.moveTo(trace.x1 + parallaxShiftX * 0.3, trace.y1 + parallaxShiftY * 0.3);
-        ctx.lineTo(trace.x2 + parallaxShiftX * 0.3, trace.y2 + parallaxShiftY * 0.3);
-        ctx.lineTo(trace.x3 + parallaxShiftX * 0.3, trace.y3 + parallaxShiftY * 0.3);
-        ctx.strokeStyle = 'rgba(6, 214, 160, 0.06)';
-        ctx.lineWidth = 1.1;
+        ctx.moveTo(trace.x1 + parallaxShiftX * 0.25, trace.y1 + parallaxShiftY * 0.25);
+        ctx.lineTo(trace.x2 + parallaxShiftX * 0.25, trace.y2 + parallaxShiftY * 0.25);
+        ctx.lineTo(trace.x3 + parallaxShiftX * 0.25, trace.y3 + parallaxShiftY * 0.25);
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.04)';
+        ctx.lineWidth = 1.0;
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.arc(trace.x3 + parallaxShiftX * 0.3, trace.y3 + parallaxShiftY * 0.3, 2, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
+        ctx.arc(trace.x3 + parallaxShiftX * 0.25, trace.y3 + parallaxShiftY * 0.25, 1.8, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.2)';
         ctx.fill();
 
         if (!isReducedMotion) {
@@ -400,14 +396,14 @@ export default function FuturisticEcosystemBackground({
           py = trace.y2 + (trace.y3 - trace.y2) * segProgress;
         }
 
-        px += parallaxShiftX * 0.3;
-        py += parallaxShiftY * 0.3;
+        px += parallaxShiftX * 0.25;
+        py += parallaxShiftY * 0.25;
 
         ctx.beginPath();
-        ctx.arc(px, py, 2.4, 0, Math.PI * 2);
+        ctx.arc(px, py, 2.0, 0, Math.PI * 2);
         ctx.fillStyle = trace.color;
         ctx.shadowColor = trace.color;
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = 6;
         ctx.fill();
         ctx.shadowBlur = 0;
       });
@@ -426,9 +422,9 @@ export default function FuturisticEcosystemBackground({
         globeCenterY,
         sphereRadius * 1.6
       );
-      coreGradient.addColorStop(0, 'rgba(6, 214, 160, 0.16)');
-      coreGradient.addColorStop(0.35, 'rgba(56, 189, 248, 0.10)');
-      coreGradient.addColorStop(0.65, 'rgba(129, 140, 248, 0.05)');
+      coreGradient.addColorStop(0, 'rgba(56, 189, 248, 0.12)');
+      coreGradient.addColorStop(0.35, 'rgba(2, 132, 199, 0.08)');
+      coreGradient.addColorStop(0.7, 'rgba(14, 165, 233, 0.03)');
       coreGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
       ctx.fillStyle = coreGradient;

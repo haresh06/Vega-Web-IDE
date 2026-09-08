@@ -71,7 +71,7 @@ for (let j = -GLOBE_LON_MAX; j <= GLOBE_LON_MAX; j++) {
 
     const isPrimary = (k % 2 === 0 && j % 2 === 0) || isCenter || (Math.abs(j) === 16 && k === 4);
     const isBrightWhite = isCenter || (k <= 2 && Math.abs(j) <= 6) || (Math.abs(j) % 6 === 0 && k % 4 === 0);
-    const color = isBrightWhite ? '#ffffff' : isPrimary ? '#00f0ff' : '#38bdf8';
+    const color = isBrightWhite ? '#ffffff' : isPrimary ? '#38bdf8' : '#0ea5e9';
     const r = isCenter ? (k === 0 ? 4.2 : 2.8) : isBrightWhite ? 2.4 : isPrimary ? 1.8 : 1.1;
 
     GLOBE_INTERSECTION_NODES.push({
@@ -223,7 +223,7 @@ export default function HomePage() {
       desc: 'Structured curriculum taking you from Embedded C fundamentals to advanced RTOS & firmware architecture.',
       tag: 'Beginner → Expert',
       href: '/learn',
-      color: '#06d6a0',
+      color: '#38bdf8',
     },
     {
       icon: FlaskConical,
@@ -231,7 +231,7 @@ export default function HomePage() {
       desc: 'Deep-dive interactive laboratories for UART, I2C, and SPI bus protocols with real-time waveform inspection.',
       tag: 'UART • I2C • SPI (3 Labs)',
       href: '/experiment',
-      color: '#4cc9f0',
+      color: '#0ea5e9',
     },
     {
       icon: Code2,
@@ -239,7 +239,7 @@ export default function HomePage() {
       desc: 'Integrated browser-based C/C++ editor with toolchain compilation, serial monitor, and live simulator.',
       tag: 'Code • Build • Run',
       href: '/ide',
-      color: '#7b2ff7',
+      color: '#0284c7',
     },
     {
       icon: Radio,
@@ -247,7 +247,7 @@ export default function HomePage() {
       desc: 'Wireless over-the-air firmware deployment through the ESP32 wireless bridge using the XMODEM protocol.',
       tag: 'Wi-Fi → ESP32 Bridge',
       href: '/ota',
-      color: '#ff6b35',
+      color: '#38bdf8',
     },
     {
       icon: Cpu,
@@ -255,7 +255,7 @@ export default function HomePage() {
       desc: 'Comprehensive pinouts, schematic guides, and sensor labs for temperature, ultrasonic, and light modules.',
       tag: 'VEGA ARIES v2.0',
       href: '/boards',
-      color: '#ffd60a',
+      color: '#0ea5e9',
     },
     {
       icon: Trophy,
@@ -263,7 +263,7 @@ export default function HomePage() {
       desc: 'Hands-on embedded programming challenges, debugging puzzles, quizzes, and earned milestone badges.',
       tag: 'Test Your Mastery',
       href: '/challenges',
-      color: '#f72585',
+      color: '#0284c7',
     },
   ];
 
@@ -402,9 +402,9 @@ export default function HomePage() {
               <path d="M-50 140 C 180 160, 300 240, 450 310" stroke="url(#cyberWaveGradLeft)" strokeWidth="0.6" opacity="0.2" />
               <defs>
                 <linearGradient id="cyberWaveGradLeft" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#00f5c4" stopOpacity="0.8" />
-                  <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#818cf8" stopOpacity="0.05" />
+                  <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.6" />
+                  <stop offset="50%" stopColor="#0ea5e9" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#0284c7" stopOpacity="0.05" />
                 </linearGradient>
               </defs>
             </svg>
@@ -417,9 +417,9 @@ export default function HomePage() {
               <path d="M 500 140 C 270 160, 150 240, 0 310" stroke="url(#cyberWaveGradRight)" strokeWidth="0.6" opacity="0.2" />
               <defs>
                 <linearGradient id="cyberWaveGradRight" x1="100%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#c084fc" stopOpacity="0.8" />
-                  <stop offset="50%" stopColor="#818cf8" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.05" />
+                  <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.6" />
+                  <stop offset="50%" stopColor="#0ea5e9" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#0284c7" stopOpacity="0.05" />
                 </linearGradient>
               </defs>
             </svg>
@@ -624,9 +624,9 @@ export default function HomePage() {
             >
               <defs>
                 <linearGradient id="boardOrbitBackGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#00f5c4" stopOpacity="0.8" />
-                  <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.6" />
-                  <stop offset="100%" stopColor="#c084fc" stopOpacity="0.85" />
+                  <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.8" />
+                  <stop offset="50%" stopColor="#0ea5e9" stopOpacity="0.6" />
+                  <stop offset="100%" stopColor="#0284c7" stopOpacity="0.85" />
                 </linearGradient>
                 <filter id="orbitBackGlow" x="-30%" y="-30%" width="160%" height="160%">
                   <feGaussianBlur stdDeviation="5" result="blur" />
@@ -661,7 +661,7 @@ export default function HomePage() {
                 />
                 {/* Back Nodes */}
                 <circle cx="270" cy="178" r="3.5" fill="#38bdf8" filter="url(#orbitBackGlow)" />
-                <circle cx="430" cy="205" r="3.0" fill="#c084fc" filter="url(#orbitBackGlow)" />
+                <circle cx="430" cy="205" r="3.0" fill="#0ea5e9" filter="url(#orbitBackGlow)" />
               </g>
             </svg>
 
@@ -682,10 +682,10 @@ export default function HomePage() {
             >
               <defs>
                 <linearGradient id="boardOrbitFrontGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#00f5c4" stopOpacity="1" />
-                  <stop offset="40%" stopColor="#38bdf8" stopOpacity="0.95" />
-                  <stop offset="75%" stopColor="#818cf8" stopOpacity="0.9" />
-                  <stop offset="100%" stopColor="#c084fc" stopOpacity="1" />
+                  <stop offset="0%" stopColor="#38bdf8" stopOpacity="1" />
+                  <stop offset="40%" stopColor="#0ea5e9" stopOpacity="0.95" />
+                  <stop offset="75%" stopColor="#0284c7" stopOpacity="0.9" />
+                  <stop offset="100%" stopColor="#38bdf8" stopOpacity="1" />
                 </linearGradient>
                 <filter id="orbitFrontGlow" x="-30%" y="-30%" width="160%" height="160%">
                   <feGaussianBlur stdDeviation="6" result="blur" />
@@ -722,18 +722,18 @@ export default function HomePage() {
 
                 {/* Intense Glowing Front Flare Starburst Nodes */}
                 <g transform="translate(100, 320)">
-                  <circle cx="0" cy="0" r="6" fill="#ffffff" filter="url(#orbitFrontGlow)" />
-                  <circle cx="0" cy="0" r="11" fill="#00f5c4" opacity="0.6" filter="url(#orbitFrontGlow)" />
-                  <circle cx="0" cy="0" r="22" fill="#00f5c4" opacity="0.25" filter="url(#orbitFrontGlow)" />
+                  <circle cx="0" cy="0" r="5" fill="#ffffff" filter="url(#orbitFrontGlow)" />
+                  <circle cx="0" cy="0" r="9" fill="#38bdf8" opacity="0.6" filter="url(#orbitFrontGlow)" />
+                  <circle cx="0" cy="0" r="18" fill="#38bdf8" opacity="0.25" filter="url(#orbitFrontGlow)" />
                 </g>
 
                 <g transform="translate(440, 310)">
-                  <circle cx="0" cy="0" r="5" fill="#ffffff" filter="url(#orbitFrontGlow)" />
-                  <circle cx="0" cy="0" r="9" fill="#c084fc" opacity="0.6" filter="url(#orbitFrontGlow)" />
-                  <circle cx="0" cy="0" r="18" fill="#c084fc" opacity="0.25" filter="url(#orbitFrontGlow)" />
+                  <circle cx="0" cy="0" r="4.5" fill="#ffffff" filter="url(#orbitFrontGlow)" />
+                  <circle cx="0" cy="0" r="8" fill="#0ea5e9" opacity="0.6" filter="url(#orbitFrontGlow)" />
+                  <circle cx="0" cy="0" r="16" fill="#0ea5e9" opacity="0.25" filter="url(#orbitFrontGlow)" />
                 </g>
 
-                <circle cx="270" cy="362" r="4.5" fill="#38bdf8" filter="url(#orbitFrontGlow)" />
+                <circle cx="270" cy="362" r="4" fill="#38bdf8" filter="url(#orbitFrontGlow)" />
               </g>
             </svg>
           </div>
@@ -837,8 +837,8 @@ export default function HomePage() {
           {/* 2A. STATISTICS ROW */}
           <section className="stats-section">
             <div className="stats-grid">
-              <div className="stat-card" style={{ '--card-accent': '#06d6a0' } as React.CSSProperties}>
-                <div className="stat-icon-wrap" style={{ color: '#06d6a0' }}>
+              <div className="stat-card" style={{ '--card-accent': '#38bdf8' } as React.CSSProperties}>
+                <div className="stat-icon-wrap" style={{ color: '#38bdf8' }}>
                   <BookOpen size={24} />
                 </div>
                 <div className="stat-number-wrap">
@@ -848,8 +848,8 @@ export default function HomePage() {
                 <span className="stat-subtext">Beginner to Advanced</span>
               </div>
 
-              <div className="stat-card" style={{ '--card-accent': '#4cc9f0' } as React.CSSProperties}>
-                <div className="stat-icon-wrap" style={{ color: '#4cc9f0' }}>
+              <div className="stat-card" style={{ '--card-accent': '#0ea5e9' } as React.CSSProperties}>
+                <div className="stat-icon-wrap" style={{ color: '#0ea5e9' }}>
                   <FlaskConical size={24} />
                 </div>
                 <div className="stat-number-wrap">
@@ -859,8 +859,8 @@ export default function HomePage() {
                 <span className="stat-subtext">UART • I2C • SPI (Exact 3 Labs)</span>
               </div>
 
-              <div className="stat-card" style={{ '--card-accent': '#7b2ff7' } as React.CSSProperties}>
-                <div className="stat-icon-wrap" style={{ color: '#7b2ff7' }}>
+              <div className="stat-card" style={{ '--card-accent': '#0284c7' } as React.CSSProperties}>
+                <div className="stat-icon-wrap" style={{ color: '#0284c7' }}>
                   <Activity size={24} />
                 </div>
                 <div className="stat-number-wrap">
@@ -870,8 +870,8 @@ export default function HomePage() {
                 <span className="stat-subtext">Interactive Simulation</span>
               </div>
 
-              <div className="stat-card" style={{ '--card-accent': '#f72585' } as React.CSSProperties}>
-                <div className="stat-icon-wrap" style={{ color: '#f72585' }}>
+              <div className="stat-card" style={{ '--card-accent': '#38bdf8' } as React.CSSProperties}>
+                <div className="stat-icon-wrap" style={{ color: '#38bdf8' }}>
                   <Trophy size={24} />
                 </div>
                 <div className="stat-number-wrap">
@@ -993,7 +993,7 @@ export default function HomePage() {
                   ].map((spec, idx) => (
                     <div key={idx} className="spec-check-item">
                       <div className="spec-check-icon">
-                        <CheckCircle2 size={16} color="#06d6a0" />
+                        <CheckCircle2 size={16} color="#38bdf8" />
                       </div>
                       <div>
                         <strong className="spec-title-text">{spec.label}: </strong>
@@ -1007,7 +1007,7 @@ export default function HomePage() {
               <div className="why-vega-right">
                 <div className="architecture-block-diagram">
                   <div className="arch-header">
-                    <Cpu size={18} color="#06d6a0" />
+                    <Cpu size={18} color="#38bdf8" />
                     <span>THEJAS32 RISC-V SoC Architecture</span>
                   </div>
                   <div className="arch-blocks-grid">
@@ -1039,7 +1039,7 @@ export default function HomePage() {
             <div className="ota-showcase-panel">
               <div className="ota-panel-header">
                 <div className="ota-badge">
-                  <Wifi size={16} color="#ff6b35" />
+                  <Wifi size={16} color="#38bdf8" />
                   <span>WIRELESS FIRMWARE DELIVERY</span>
                 </div>
                 <h3 className="ota-title">Understanding the VEGA OTA Flashing Pipeline</h3>
@@ -1091,7 +1091,7 @@ export default function HomePage() {
               </div>
 
               <div className="ota-architecture-note">
-                <ShieldCheck size={16} color="#06d6a0" />
+                <ShieldCheck size={16} color="#38bdf8" />
                 <span>
                   <strong>Architectural Note:</strong> The VEGA board receives the firmware image via its hardware UART0 port from the ESP32 wireless bridge module.
                 </span>

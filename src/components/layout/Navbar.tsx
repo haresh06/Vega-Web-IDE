@@ -92,8 +92,9 @@ export default function Navbar() {
           left: 0;
           right: 0;
           z-index: 100;
-          background: rgba(10, 14, 23, 0.85);
+          background: rgba(4, 9, 22, 0.88);
           backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
           border-bottom: 1px solid var(--color-border);
         }
         [data-theme="light"] .navbar {
@@ -123,7 +124,7 @@ export default function Navbar() {
         .logo-text {
           font-size: 1.2rem;
           font-weight: 800;
-          background: linear-gradient(135deg, var(--color-accent-cyan), var(--color-accent-blue));
+          background: linear-gradient(135deg, #ffffff 30%, #38bdf8 80%, #0284c7 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -159,8 +160,9 @@ export default function Navbar() {
           background: rgba(0, 0, 0, 0.05);
         }
         .navbar-link.active {
-          color: var(--color-accent-cyan);
-          background: rgba(6, 214, 160, 0.1);
+          color: #ffffff;
+          background: rgba(56, 189, 248, 0.12);
+          border: 1px solid rgba(56, 189, 248, 0.25);
         }
         .nav-icon {
           font-size: 0.85rem;
@@ -185,9 +187,9 @@ export default function Navbar() {
         }
         .btn-nav-login {
           padding: 0.4rem 1rem;
-          background: linear-gradient(135deg, var(--color-accent-cyan), var(--color-accent-blue));
-          color: #000;
-          font-weight: 600;
+          background: linear-gradient(135deg, #38bdf8, #0284c7);
+          color: #030a14;
+          font-weight: 700;
           font-size: 0.8rem;
           border-radius: 6px;
           text-decoration: none;
@@ -195,7 +197,7 @@ export default function Navbar() {
         }
         .btn-nav-login:hover {
           transform: translateY(-1px);
-          box-shadow: 0 4px 15px rgba(6, 214, 160, 0.3);
+          box-shadow: 0 4px 15px rgba(14, 165, 233, 0.35);
         }
         .mobile-toggle {
           display: none;
@@ -224,7 +226,7 @@ export default function Navbar() {
         .mobile-nav-link:hover,
         .mobile-nav-link.active {
           color: var(--color-accent-cyan);
-          background: rgba(6, 214, 160, 0.1);
+          background: rgba(56, 189, 248, 0.1);
         }
         @media (max-width: 1100px) {
           .navbar-links { display: none; }
