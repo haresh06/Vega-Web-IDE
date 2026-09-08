@@ -1,17 +1,14 @@
 /**
- * Official VEGA XMODEM-CRC Protocol Implementation & State Machine
- * Reconstructed from official C-DAC send.py / vega-flasher / vega-xmodem tools.
+ * Official VEGA XMODEM-CRC Protocol Implementation
+ * Exact recreation of the official C-DAC send.py / vega-flasher toolchain.
  *
- * State Machine:
- * 1. STATE 1 (WAIT_FOR_FLASHER_START):
- *    Listen for '<' (0x3C).
- *    On first '<', send '>' (0x3E) exactly once and immediately transition to STATE 2.
- * 2. STATE 2 (WAIT_FOR_XMODEM_C):
- *    Wait for 'C' (0x43). Ignore repeated '<', '>', or stray bytes.
- *    On 'C', transition to STATE 3.
- * 3. STATE 3 (XMODEM_TRANSFER):
- *    Stream 128-byte XMODEM-CRC blocks [SOH, blockNum, ~blockNum, 128-byte payload, crcHi, crcLo].
- *    On completion, send EOT -> ACK, then '\n' (0x0A) to launch the application.
+ * Sequence:
+ * 1. Listen strictly for bootloader prompt '<' (0x3C), ignoring any noise before it.
+ * 2. Send '>' (0x3E) exactly once upon seeing '<'.
+ * 3. Wait for CRC poll 'C' (0x43) from the bootloader.
+ * 4. Transmit 128-byte blocks with 16-bit CRC-CCITT (poly 0x1021, init 0x0000).
+ * 5. Send EOT (0x04) -> receive ACK (0x06).
+ * 6. Send '\n' (0x0A) to trigger application execution.
  */
 
 import { WebSerialConnection } from './web-serial';
@@ -30,7 +27,7 @@ export const XMODEM_CONTROL = {
 } as const;
 
 /**
- * Compute 16-bit CRC-CCITT (polynomial 0x1021, init 0x0000)
+ * Compute 16-bit CRC-CCITT (polynomial 0x1021, initial value 0x0000)
  */
 export function crc16Ccitt(data: Uint8Array): number {
   let crc = 0x0000;
@@ -62,6 +59,7 @@ export interface XmodemOptions {
   onProgress?: (progress: XmodemProgress) => void;
   onLog?: (message: string) => void;
   stageName?: string;
+  sendExecuteLf?: boolean;
 }
 
 export class XmodemCrcSender {
@@ -72,51 +70,38 @@ export class XmodemCrcSender {
   }
 
   /**
-   * Official VEGA Handshake State Machine:
-   * State 1: WAIT_FOR_FLASHER_START (listen for '<', send '>' once, switch to State 2)
-   * State 2: WAIT_FOR_XMODEM_C (listen for 'C', ignore repeated '<', transition to State 3)
+   * Official C-DAC VEGA Bootloader Handshake:
+   * 1. Wait strictly for '<' (0x3C), ignoring any pre-handshake noise.
+   * 2. Send '>' (0x3E) exactly once.
+   * 3. Wait strictly for 'C' (0x43) to initiate XMODEM-CRC block transfer.
    */
-  public async waitForHandshake(timeoutMs = 15000, onLog?: (msg: string) => void): Promise<boolean> {
+  public async waitForHandshake(timeoutMs = 25000, onLog?: (msg: string) => void): Promise<boolean> {
     const startTime = Date.now();
-    let state: 'WAIT_FOR_FLASHER_START' | 'WAIT_FOR_XMODEM_C' = 'WAIT_FOR_FLASHER_START';
-
-    onLog?.("Waiting for VEGA FLASHER '<' handshake...");
+    let state: 'WAIT_FOR_PROMPT' | 'WAIT_FOR_CRC_C' = 'WAIT_FOR_PROMPT';
 
     while (Date.now() - startTime < timeoutMs) {
-      const byte = await this.serial.readByte(800);
+      const byte = await this.serial.readByte(1000);
       if (byte === null) continue;
 
-      if (state === 'WAIT_FOR_FLASHER_START') {
+      if (state === 'WAIT_FOR_PROMPT') {
         if (byte === XMODEM_CONTROL.PROMPT_IN) { // '<' (0x3C)
-          onLog?.("Received '<' from VEGA bootloader.");
-          onLog?.("Sending '>' acknowledge...");
+          onLog?.('Received "<" from VEGA bootloader. Sending ">" acknowledge...');
           await this.serial.write([XMODEM_CONTROL.PROMPT_OUT]); // Send '>' exactly once
-          state = 'WAIT_FOR_XMODEM_C';
-          onLog?.("Waiting for XMODEM-CRC 'C'...");
+          state = 'WAIT_FOR_CRC_C';
           continue;
         }
-
+        // Ignore any other bytes or stray characters before '<' is seen
+      } else if (state === 'WAIT_FOR_CRC_C') {
         if (byte === XMODEM_CONTROL.CRC_POLL) { // 'C' (0x43)
-          onLog?.("Received 'C' from VEGA bootloader.");
+          onLog?.('Received "C" CRC poll. Bootloader ready for XMODEM-CRC transfer.');
           return true;
         }
 
         if (byte === XMODEM_CONTROL.NAK) {
-          onLog?.("Received NAK, proceeding with CRC mode...");
+          onLog?.('Received NAK. Bootloader ready for transfer.');
           return true;
         }
-      } else if (state === 'WAIT_FOR_XMODEM_C') {
-        if (byte === XMODEM_CONTROL.CRC_POLL) { // 'C' (0x43)
-          onLog?.("Received 'C' from VEGA bootloader.");
-          return true;
-        }
-
-        if (byte === XMODEM_CONTROL.NAK) {
-          onLog?.("Received NAK, proceeding with CRC mode...");
-          return true;
-        }
-
-        // Silently ignore repeated '<', '>', or other characters while waiting for 'C'
+        // Ignore repeated '<' or other characters while waiting for 'C'
       }
     }
 
@@ -124,13 +109,17 @@ export class XmodemCrcSender {
   }
 
   /**
-   * Read response byte after transmitting a block, safely filtering any leftover sync pulses
+   * Read response byte after transmitting a block, safely filtering leftover sync pulses
    */
-  private async readPacketResponse(timeoutMs: number): Promise<number | null> {
+  private async readPacketResponse(timeoutMs: number, onDebugByte?: (b: number) => void): Promise<number | null> {
     const startTime = Date.now();
     while (Date.now() - startTime < timeoutMs) {
       const resp = await this.serial.readByte(Math.max(100, timeoutMs - (Date.now() - startTime)));
       if (resp === null) return null;
+
+      if (onDebugByte) {
+        onDebugByte(resp);
+      }
 
       if (
         resp === XMODEM_CONTROL.ACK ||
@@ -140,8 +129,12 @@ export class XmodemCrcSender {
         return resp;
       }
 
-      // If stray 'C' or '<' arrives, continue waiting for ACK/NAK
-      if (resp === XMODEM_CONTROL.CRC_POLL || resp === XMODEM_CONTROL.PROMPT_IN || resp === XMODEM_CONTROL.PROMPT_OUT) {
+      // Ignore stray sync characters while waiting for ACK/NAK
+      if (
+        resp === XMODEM_CONTROL.CRC_POLL ||
+        resp === XMODEM_CONTROL.PROMPT_IN ||
+        resp === XMODEM_CONTROL.PROMPT_OUT
+      ) {
         continue;
       }
     }
@@ -149,7 +142,7 @@ export class XmodemCrcSender {
   }
 
   /**
-   * Transfer binary payload using official VEGA XMODEM-CRC
+   * Transfer binary payload using official VEGA XMODEM-CRC protocol
    */
   public async send(binaryData: Uint8Array, options?: XmodemOptions): Promise<boolean> {
     const {
@@ -157,32 +150,33 @@ export class XmodemCrcSender {
       maxRetries = 15,
       onProgress,
       onLog,
-      stageName = 'Uploading firmware',
+      stageName = 'Application',
+      sendExecuteLf = true,
     } = options || {};
 
     const totalBytes = binaryData.length;
     const BLOCK_SIZE = 128;
     const totalBlocks = Math.ceil(totalBytes / BLOCK_SIZE);
 
-    // 1. Wait for handshake state machine ('<' -> '>' -> 'C')
-    const ready = await this.waitForHandshake(15000, onLog);
+    // 1. Strict handshake with VEGA bootloader: '<' -> '>' -> 'C'
+    const ready = await this.waitForHandshake(25000, onLog);
     if (!ready) {
-      throw new Error("Handshake timeout: VEGA board did not respond with '<' or 'C'. Please verify J12 is SHORTED and press physical RESET button on board.");
+      throw new Error('Handshake timeout waiting for VEGA bootloader. Ensure J12 is SHORTED and press the physical RESET button.');
     }
 
-    onLog?.("Starting XMODEM-CRC transfer...");
+    onLog?.(`Starting XMODEM-CRC transfer (${totalBytes} bytes, ${totalBlocks} blocks)...`);
 
     // 2. Transmit each block
     let blockNumber = 1;
     let offset = 0;
 
     while (offset < totalBytes) {
-      // Prepare 128-byte block
+      // Prepare 128-byte block payload
       const blockPayload = new Uint8Array(BLOCK_SIZE);
       const slice = binaryData.subarray(offset, Math.min(offset + BLOCK_SIZE, totalBytes));
       blockPayload.set(slice);
 
-      // Pad remaining bytes with 0x1A
+      // Pad remaining bytes with 0x1A (Ctrl+Z)
       if (slice.length < BLOCK_SIZE) {
         blockPayload.fill(XMODEM_CONTROL.PAD, slice.length);
       }
@@ -192,7 +186,7 @@ export class XmodemCrcSender {
       const crcHi = (crc >> 8) & 0xff;
       const crcLo = crc & 0xff;
 
-      // Construct XMODEM Packet: [SOH, blockNum, ~blockNum, 128-byte data, crcHi, crcLo]
+      // Construct XMODEM Packet: [SOH, blockNum, ~blockNum, 128 bytes data, crcHi, crcLo]
       const packet = new Uint8Array(3 + BLOCK_SIZE + 2);
       packet[0] = XMODEM_CONTROL.SOH;
       packet[1] = blockNumber & 0xff;
@@ -201,13 +195,32 @@ export class XmodemCrcSender {
       packet[3 + BLOCK_SIZE] = crcHi;
       packet[3 + BLOCK_SIZE + 1] = crcLo;
 
+      // Temporary byte-level debug log for Block 1
+      if (blockNumber === 1) {
+        const hexHeader = Array.from(packet.subarray(0, 8))
+          .map((b) => '0x' + b.toString(16).padStart(2, '0').toUpperCase())
+          .join(' ');
+        onLog?.(`[DEBUG] Block 1 Header: ${hexHeader} (Total: 133 bytes, CRC: 0x${crc.toString(16).padStart(4, '0').toUpperCase()})`);
+      }
+
       let retries = 0;
       let acked = false;
 
       while (retries < maxRetries && !acked) {
         await this.serial.write(packet);
 
-        const resp = await this.readPacketResponse(timeoutMs);
+        const resp = await this.readPacketResponse(timeoutMs, (debugByte) => {
+          if (blockNumber === 1) {
+            const byteHex = '0x' + debugByte.toString(16).padStart(2, '0').toUpperCase();
+            let label = '';
+            if (debugByte === XMODEM_CONTROL.ACK) label = ' (ACK)';
+            else if (debugByte === XMODEM_CONTROL.NAK) label = ' (NAK)';
+            else if (debugByte === XMODEM_CONTROL.CAN) label = ' (CAN)';
+            else if (debugByte === XMODEM_CONTROL.CRC_POLL) label = ' (\'C\')';
+            else if (debugByte === XMODEM_CONTROL.PROMPT_IN) label = ' (\'<\')';
+            onLog?.(`[DEBUG] RX after Block 1: ${byteHex}${label}`);
+          }
+        });
 
         if (resp === XMODEM_CONTROL.ACK) {
           acked = true;
@@ -215,7 +228,7 @@ export class XmodemCrcSender {
           throw new Error(`XMODEM transfer cancelled by device at block ${blockNumber}.`);
         } else if (resp === XMODEM_CONTROL.NAK || resp === null) {
           retries++;
-          onLog?.(`Block ${blockNumber}/${totalBlocks} unacknowledged (${resp === null ? 'timeout' : 'NAK'}). Retry ${retries}/${maxRetries}...`);
+          onLog?.(`  Block ${blockNumber}/${totalBlocks} unacknowledged (${resp === null ? 'timeout' : 'NAK'}). Retry ${retries}/${maxRetries}...`);
           await new Promise((r) => setTimeout(r, 50));
         } else {
           retries++;
@@ -228,7 +241,7 @@ export class XmodemCrcSender {
       }
 
       const currentBlockIndex = Math.min(Math.floor(offset / BLOCK_SIZE) + 1, totalBlocks);
-      onLog?.(`Block ${currentBlockIndex}/${totalBlocks}...`);
+      onLog?.(`  Transmitted block ${currentBlockIndex}/${totalBlocks}`);
 
       offset += BLOCK_SIZE;
       blockNumber = (blockNumber + 1) & 0xff;
@@ -247,7 +260,7 @@ export class XmodemCrcSender {
     }
 
     // 3. Send EOT (End of Transmission)
-    onLog?.('EOT...');
+    onLog?.('Transmission complete. Sending EOT...');
     let eotRetries = 0;
     let eotAcked = false;
 
@@ -263,15 +276,16 @@ export class XmodemCrcSender {
       }
     }
 
-    if (!eotAcked) {
-      onLog?.('EOT sent.');
-    } else {
+    if (eotAcked) {
       onLog?.('Final ACK received.');
     }
 
-    // 4. Send '\n' (0x0A) as required by official VEGA flasher tools to execute program
-    await this.serial.write([XMODEM_CONTROL.EXECUTE_LF]);
-    await new Promise((r) => setTimeout(r, 50));
+    // 4. Send '\n' (0x0A) as required by official VEGA flasher tool to execute the application
+    if (sendExecuteLf) {
+      onLog?.('Sending launch signal (\\n)...');
+      await this.serial.write([XMODEM_CONTROL.EXECUTE_LF]);
+      await new Promise((r) => setTimeout(r, 50));
+    }
 
     return true;
   }

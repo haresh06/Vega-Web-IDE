@@ -1,6 +1,9 @@
 /**
  * VEGA ARIES v2.0 Direct USB Flasher
- * Implements the official VEGA FLASHER (J12 SHORTED) hardware programming sequence.
+ * Single-Stage Permanent SPI Flash Programming (Matches Official C-DAC vega-flasher / send.py):
+ *
+ * J12 (BOOT-SEL): SHORTED
+ * RESET -> Wait for '<' -> Send '>' -> Wait for 'C' -> Send application.bin directly via XMODEM-CRC -> EOT -> ACK -> Send '\n'
  */
 
 import { WebSerialConnection } from './web-serial';
@@ -14,7 +17,7 @@ export interface VegaFlashOptions {
 }
 
 /**
- * Convert Base64 string to Uint8Array
+ * Convert Base64 string to Uint8Array buffer
  */
 export function base64ToUint8Array(base64: string): Uint8Array {
   const binaryString = atob(base64);
@@ -33,7 +36,7 @@ export class VegaUsbFlasher {
   }
 
   /**
-   * Execute official VEGA FLASHER permanent SPI Flash programming sequence
+   * Flash the compiled application binary directly over USB using the official single-stage protocol
    */
   public async flashBinary(
     appBinary: Uint8Array | string,
@@ -46,35 +49,38 @@ export class VegaUsbFlasher {
       throw new Error('Application binary is empty. Please build your project first.');
     }
 
-    onLog?.('Starting Direct USB Flash sequence...');
-    onLog?.('J12: SHORTED');
-
-    // STAGE 0: Serial Port Connection
+    // Connect USB serial port if not already open
     onStageChange?.('Connecting USB');
     if (!this.serial.connected) {
       onLog?.('Opening VEGA Serial Port at 115200 baud...');
       await this.serial.requestAndOpen(115200);
     }
 
-    // STAGE 1: DTR/RTS Reset Pulse
-    onStageChange?.('Resetting VEGA');
-    await this.serial.drain(50);
-    await this.serial.resetBoard(150);
+    // Initial log banner matching official tool output
+    onLog?.('Starting Direct USB Flash sequence...');
+    onLog?.('Target: VEGA ARIES v2 (THEJAS32 RISC-V)');
+    onLog?.('Transport: Direct USB (Web Serial @ 115200 baud, 8N1)');
+    onLog?.('Mode: Permanent SPI Flash Programming (J12: SHORTED)');
+    onLog?.(`Application binary size: ${appBytes.length} bytes`);
+    onLog?.('');
+    onLog?.('Please press the physical RESET button on the VEGA board.');
+    onLog?.('Waiting for VEGA bootloader...');
 
-    // STAGE 2: Official VEGA Flasher Handshake & SPI Flash Transfer
-    onStageChange?.('Programming SPI Flash');
+    onStageChange?.('Programming Application');
 
     const xmodem = new XmodemCrcSender(this.serial);
 
     await xmodem.send(appBytes, {
-      stageName: 'Programming SPI Flash',
-      timeoutMs: 4000,
-      maxRetries: 20,
+      stageName: 'Application',
+      timeoutMs: 5000,
+      maxRetries: 15,
       onProgress,
       onLog,
+      sendExecuteLf: true,
     });
 
-    onLog?.('USB Direct Flash completed successfully.');
+    onLog?.('');
+    onLog?.('✅ USB Direct Flash completed successfully!');
     onStageChange?.('Flash Complete');
 
     return true;

@@ -857,23 +857,15 @@ export default function IDEPage() {
     setActivePanel('flash');
     setBuildLog([]);
 
-    addFlashLog('▶ Starting Direct USB Flash sequence...');
-    addFlashLog(`  Target:       VEGA ARIES v2 (THEJAS32 RISC-V)`);
-    addFlashLog(`  Transport:    Direct USB (Web Serial @ 115200 baud, 8N1)`);
-    addFlashLog(`  Firmware:     VEGA_ARIES_v2_TEST.bin (${(firmwareSize / 1024).toFixed(2)} KB)`);
-    addFlashLog(`  Checksum:     ${buildChecksum}`);
-    addFlashLog('');
-
     try {
       if (!webSerialRef.current) {
         webSerialRef.current = new WebSerialConnection();
       }
 
       if (!webSerialRef.current.connected) {
-        addFlashLog('Prompting for VEGA USB Serial port...');
+        addFlashLog('Opening VEGA Serial Port at 115200 baud...');
         await webSerialRef.current.requestAndOpen(115200);
         setUsbConnected(true);
-        addFlashLog('✓ Serial port opened at 115200 baud.');
       }
 
       setFlashStatus('flashing');
@@ -903,8 +895,9 @@ export default function IDEPage() {
         ],
         [
           'Ensure the VEGA board is connected to your PC with the Type-B USB cable',
-          'Check that no other application (e.g. Arduino IDE or Serial Monitor) is holding the COM port',
-          'Try pressing the RESET button on the VEGA board and retry flashing',
+          'Ensure J12 (BOOT-SEL) is SHORTED for permanent SPI Flash programming',
+          'Press the physical RESET button on the VEGA board and retry flashing',
+          'Check that no other application (e.g. Serial Monitor) is holding the COM port',
         ]
       );
     }
