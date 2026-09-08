@@ -146,6 +146,18 @@ function quickDnsLookup(host: string, timeoutMs = 600): Promise<string | null> {
 
 export async function GET() {
   // --------------------------------------------------------------------------
+  // CLOUD ENVIRONMENT DETECTION (Vercel Serverless / AWS Lambda)
+  // Serverless functions in the cloud cannot access user's private local LAN.
+  // --------------------------------------------------------------------------
+  const isCloud = process.env.VERCEL === '1' || process.env.NOW_REGION || process.env.AWS_LAMBDA_FUNCTION_NAME;
+  if (isCloud) {
+    return NextResponse.json<DiscoveredResult>({
+      found: false,
+      message: 'Running in cloud environment (Vercel). Direct browser-side LAN/mDNS discovery active.',
+    });
+  }
+
+  // --------------------------------------------------------------------------
   // STAGE 1 & 2 (PARALLEL): mDNS Hostnames + ARP Cache IPs + SoftAP
   // --------------------------------------------------------------------------
   const mdnsCandidates = ['vega-esp32.local', 'vega-gateway.local', 'esp32.local'];

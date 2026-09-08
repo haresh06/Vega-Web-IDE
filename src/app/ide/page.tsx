@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { Plus, X, Edit2, FileCode, FileText, RotateCw, Usb, Wifi } from 'lucide-react';
+import { Plus, X, Edit2, FileCode, FileText, RotateCw, Usb, Wifi, Settings } from 'lucide-react';
 import { checkEsp32Status, uploadFirmwareToEsp32 } from '@/lib/esp32/wifi-flasher';
 import { discoverEsp32, checkEsp32Health, probeEsp32Endpoint, DiscoveredEsp32 } from '@/lib/esp32/discovery';
 import VegaLabSetupCard from '@/components/ide/VegaLabSetupCard';
@@ -170,6 +170,7 @@ export default function IDEPage() {
   const [discoveryStatus, setDiscoveryStatus] = useState<'searching' | 'connected' | 'not_found'>('searching');
   const [discoveredDevice, setDiscoveredDevice] = useState<DiscoveredEsp32 | null>(null);
   const [manualEsp32Ip, setManualEsp32Ip] = useState('');
+  const [showManualIpInput, setShowManualIpInput] = useState(false);
   const [isConnectingIp, setIsConnectingIp] = useState(false);
   const isDiscoveringRef = useRef(false);
   const healthFailCountRef = useRef(0);
@@ -1050,48 +1051,61 @@ export default function IDEPage() {
             </button>
           </div>
 
-          {/* If OTA is selected, show ESP32 Gateway IP input + status */}
+          {/* If OTA is selected, show ESP32 Discovery status pill (Automatic UX with optional fallback) */}
           {flashTarget === 'ota' && (
             <div
               className={`esp32-status-pill ${discoveryStatus}`}
               title={
                 discoveryStatus === 'connected'
-                  ? `ESP32-S3 Online (${discoveredDevice?.ip || manualEsp32Ip}) • Discovered via ${discoveredDevice?.source?.toUpperCase() || 'DIRECT/IP'}`
+                  ? `ESP32-S3 Online (${discoveredDevice?.ip || manualEsp32Ip}) • Mode: ${discoveredDevice?.source?.toUpperCase() || 'AUTO'}`
                   : discoveryStatus === 'searching'
-                  ? 'Connecting / Searching for ESP32 on network...'
-                  : 'ESP32 not found. Enter IP and click Connect or 🔄 to rescan.'
+                  ? 'Searching for ESP32 on network via mDNS and local gateway...'
+                  : 'ESP32 not found. Click 🔄 to retry auto-discovery or ⚙️ for manual IP override.'
               }
             >
               <span className="ip-label">📡 ESP32:</span>
-              <input
-                type="text"
-                className="esp32-ip-input"
-                value={manualEsp32Ip}
-                onChange={(e) => setManualEsp32Ip(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleConnectEsp32Ip();
-                }}
-                placeholder="e.g. 10.240.46.148"
-                title="Enter ESP32 IP address and press Enter to connect"
-              />
-              <button
-                type="button"
-                className={`esp32-connect-btn ${discoveryStatus === 'connected' ? 'connected' : ''}`}
-                onClick={() => handleConnectEsp32Ip()}
-                disabled={isConnectingIp}
-                title={discoveryStatus === 'connected' ? 'Connected (click to re-test)' : 'Connect to ESP32 IP'}
-              >
-                {isConnectingIp ? (
-                  <span className="esp32-state-text searching">Connecting...</span>
-                ) : discoveryStatus === 'connected' ? (
-                  <span className="esp32-state-text connected">
-                    <span className="live-dot" />
-                    Connected
-                  </span>
-                ) : (
-                  <span className="esp32-state-text connect-action">Connect</span>
-                )}
-              </button>
+              {discoveryStatus === 'searching' && !showManualIpInput && (
+                <span className="esp32-state-text searching">Searching...</span>
+              )}
+              {discoveryStatus === 'connected' && !showManualIpInput && (
+                <span className="esp32-state-text connected">
+                  <span className="live-dot" />
+                  {discoveredDevice?.ip || 'Connected'}
+                </span>
+              )}
+              {discoveryStatus === 'not_found' && !showManualIpInput && (
+                <span className="esp32-state-text not-found">Not Found</span>
+              )}
+
+              {/* Optional Manual IP Override / Fallback Input (Toggleable via ⚙️) */}
+              {showManualIpInput && (
+                <>
+                  <input
+                    type="text"
+                    className="esp32-ip-input"
+                    value={manualEsp32Ip}
+                    onChange={(e) => setManualEsp32Ip(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleConnectEsp32Ip();
+                    }}
+                    placeholder="e.g. 10.240.46.148"
+                    title="Enter ESP32 IP address and press Enter"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    className="esp32-connect-btn"
+                    onClick={() => handleConnectEsp32Ip()}
+                    disabled={isConnectingIp}
+                    title="Connect to entered IP"
+                  >
+                    <span className="esp32-state-text connect-action">
+                      {isConnectingIp ? 'Connecting...' : 'Connect'}
+                    </span>
+                  </button>
+                </>
+              )}
+
               <button
                 type="button"
                 className={`esp32-rescan-btn ${discoveryStatus === 'searching' ? 'spinning' : ''}`}
@@ -1099,6 +1113,14 @@ export default function IDEPage() {
                 title="Auto-scan network for ESP32"
               >
                 <RotateCw size={11} />
+              </button>
+              <button
+                type="button"
+                className={`esp32-gear-btn ${showManualIpInput ? 'active' : ''}`}
+                onClick={() => setShowManualIpInput(!showManualIpInput)}
+                title={showManualIpInput ? 'Hide manual IP settings' : 'Configure / Manual IP fallback'}
+              >
+                <Settings size={11} />
               </button>
             </div>
           )}
@@ -1652,6 +1674,23 @@ export default function IDEPage() {
         }
         .esp32-rescan-btn.spinning svg {
           animation: esp32-spin 1s linear infinite;
+        }
+        .esp32-gear-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: none;
+          border: none;
+          color: var(--color-text-muted);
+          cursor: pointer;
+          padding: 2px;
+          border-radius: 3px;
+          transition: all 0.2s;
+        }
+        .esp32-gear-btn:hover,
+        .esp32-gear-btn.active {
+          color: var(--color-accent-cyan);
+          background: rgba(255, 255, 255, 0.08);
         }
         @keyframes esp32-spin {
           from { transform: rotate(0deg); }
