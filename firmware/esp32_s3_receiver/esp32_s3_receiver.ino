@@ -1,37 +1,38 @@
 /**
  * ============================================================================
- * VEGA ARIES v2 - ESP32-S3 Wi-Fi Firmware Receiver (Phase 2A)
+ * VEGA ARIES v2 - ESP32-S3 Wi-Fi Firmware Receiver & Programmer
  * ============================================================================
  * 
  * Target Board: ESP32-S3 DevKit (or standard ESP32 / ESP32-S2 / ESP32-C3)
  * Framework: Arduino ESP32 (v2.0.x / v3.x.x)
  * 
  * Features:
- *  1. Connects to local Wi-Fi (or starts Fallback AP if connection fails).
- *  2. Mounts LittleFS filesystem.
- *  3. Starts HTTP Server with full CORS support for browser requests.
- *  4. Exposes GET /status - Returns board info, RSSI, LittleFS free space, and stored firmware info.
- *  5. Exposes POST /upload - Streams incoming application/octet-stream into /firmware.bin.
- *  6. Computes 8-character uppercase SHA-256 hash on-the-fly (matching Next.js /api/compile).
- *  7. Validates against X-Expected-Size and X-Expected-Checksum headers if provided.
+ *  1. Dynamic Wi-Fi Provisioning via WiFiManager (Captive Portal: "VEGA-PROGRAMMER").
+ *  2. Saves Wi-Fi credentials in non-volatile flash memory for auto-reconnect.
+ *  3. mDNS responder active at http://vega-esp32.local on Port 80.
+ *  4. Mounts LittleFS filesystem for firmware binary storage.
+ *  5. Starts HTTP Server with full CORS and Private Network Access (PNA) support.
+ *  6. GET /status - Returns board info, RSSI, LittleFS free space, and stored firmware info.
+ *  7. POST /upload - Streams incoming application/octet-stream into LittleFS firmware file.
+ *  8. GET /wifiinfo - Returns network details and connection status.
+ *  9. GET /changewifi - Clears saved Wi-Fi credentials and restarts in AP provisioning mode.
+ * 10. GET /reset - Restarts the ESP32.
  * ============================================================================
  */
 
 #include <WiFi.h>
 #include <WebServer.h>
+#include <WiFiManager.h>
 #include <LittleFS.h>
 #include <ESPmDNS.h>
 #include <mbedtls/sha256.h>
 
 // ============================================================================
-// CONFIGURATION: Set your Wi-Fi credentials here
+// CONFIGURATION & CONSTANTS
 // ============================================================================
-const char* WIFI_SSID     = "vivo";
-const char* WIFI_PASSWORD = "9952100318";
-
-// Fallback SoftAP settings (active if Wi-Fi connection fails or not configured)
-const char* AP_SSID       = "VEGA-ESP32-GATEWAY";
+const char* AP_NAME       = "VEGA-PROGRAMMER";
 const char* AP_PASSWORD   = "vega123456";
+const char* MDNS_HOSTNAME = "vega-esp32";
 
 // HTTP Server on Port 80
 WebServer server(80);
@@ -49,10 +50,11 @@ bool uploadHasError = false;
 String uploadErrorMessage = "";
 
 // ============================================================================
-// CORS & HTTP HELPER FUNCTIONS
+// CORS & HTTP HELPER FUNCTIONS (WITH PRIVATE NETWORK ACCESS SUPPORT)
 // ============================================================================
 void setCorsHeaders() {
   server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.sendHeader("Access-Control-Allow-Private-Network", "true");
   server.sendHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   server.sendHeader("Access-Control-Allow-Headers", "Content-Type, X-Expected-Size, X-Expected-Checksum");
 }
@@ -109,13 +111,19 @@ void handleStatus() {
   size_t usedBytes  = LittleFS.usedBytes();
   size_t freeBytes  = (totalBytes > usedBytes) ? (totalBytes - usedBytes) : 0;
 
+  String currentIp = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP().toString() : WiFi.softAPIP().toString();
+  String currentMode = (WiFi.status() == WL_CONNECTED) ? "STA" : "AP";
+
   String json = "{";
   json += "\"status\":\"ready\",";
   json += "\"chip\":\"" + String(ESP.getChipModel()) + "\",";
   json += "\"sdk_version\":\"" + String(ESP.getSdkVersion()) + "\",";
-  json += "\"ip\":\"" + WiFi.localIP().toString() + "\",";
-  json += "\"mode\":\"" + String(WiFi.getMode() == WIFI_STA ? "STA" : "AP") + "\",";
+  json += "\"ip\":\"" + currentIp + "\",";
+  json += "\"mode\":\"" + currentMode + "\",";
   json += "\"rssi\":" + String(WiFi.RSSI()) + ",";
+  json += "\"vega_connected\":true,";
+  json += "\"programming_state\":\"idle\",";
+  json += "\"flash_done\":false,";
   json += "\"littlefs_total\":" + String(totalBytes) + ",";
   json += "\"littlefs_used\":" + String(usedBytes) + ",";
   json += "\"littlefs_free\":" + String(freeBytes) + ",";
@@ -130,7 +138,52 @@ void handleStatus() {
 }
 
 // ============================================================================
-// ROUTE: POST /upload (Upload Completion & Response)
+// ROUTE: GET /wifiinfo
+// ============================================================================
+void handleWifiInfo() {
+  setCorsHeaders();
+
+  String json = "{";
+  json += "\"status\":\"ok\",";
+  json += "\"ssid\":\"" + WiFi.SSID() + "\",";
+  json += "\"ip\":\"" + ((WiFi.status() == WL_CONNECTED) ? WiFi.localIP().toString() : WiFi.softAPIP().toString()) + "\",";
+  json += "\"gateway\":\"" + WiFi.gatewayIP().toString() + "\",";
+  json += "\"subnet\":\"" + WiFi.subnetMask().toString() + "\",";
+  json += "\"mac\":\"" + WiFi.macAddress() + "\",";
+  json += "\"rssi\":" + String(WiFi.RSSI()) + ",";
+  json += "\"connected\":" + String(WiFi.status() == WL_CONNECTED ? "true" : "false");
+  json += "}";
+
+  server.send(200, "application/json", json);
+}
+
+// ============================================================================
+// ROUTE: GET /changewifi (Reset Wi-Fi Credentials & Restart Portal)
+// ============================================================================
+void handleResetWifi() {
+  setCorsHeaders();
+
+  String json = "{\"status\":\"ok\",\"message\":\"Wi-Fi credentials erased. Restarting into VEGA-PROGRAMMER provisioning portal...\"}";
+  server.send(200, "application/json", json);
+  delay(1000);
+
+  WiFiManager wm;
+  wm.resetSettings();
+  ESP.restart();
+}
+
+// ============================================================================
+// ROUTE: GET /reset (Reboot ESP32)
+// ============================================================================
+void handleReboot() {
+  setCorsHeaders();
+  server.send(200, "application/json", "{\"status\":\"ok\",\"message\":\"Rebooting ESP32...\"}");
+  delay(800);
+  ESP.restart();
+}
+
+// ============================================================================
+// ROUTE: POST /upload (Upload Completion & Verification Response)
 // ============================================================================
 void handleUploadResponse() {
   setCorsHeaders();
@@ -269,11 +322,11 @@ void setup() {
   delay(1000);
 
   Serial.println("\n==================================================");
-  Serial.println("  VEGA ARIES v2 - ESP32-S3 Wi-Fi Receiver (Phase 2A)");
+  Serial.println("  VEGA ARIES v2 - ESP32-S3 Wi-Fi Programmer");
   Serial.println("==================================================");
 
   // Initialize LittleFS
-  if (!LittleFS.begin(true)) { // true = format if corrupted
+  if (!LittleFS.begin(true)) {
     Serial.println("[FATAL] LittleFS initialization failed!");
   } else {
     Serial.printf("[FS] LittleFS Mounted. Total: %u KB, Used: %u KB\n",
@@ -281,37 +334,36 @@ void setup() {
                   (unsigned int)(LittleFS.usedBytes() / 1024));
   }
 
-  // Connect to Wi-Fi
-  Serial.printf("[Wi-Fi] Connecting to '%s'...\n", WIFI_SSID);
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  // --------------------------------------------------------------------------
+  // DYNAMIC WI-FI PROVISIONING VIA WIFIMANAGER
+  // --------------------------------------------------------------------------
+  WiFiManager wm;
+  wm.setConfigPortalTimeout(180); // 3 minutes timeout to keep trying or continue in background
 
-  unsigned long startAttemptTime = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 10000) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println();
+  Serial.println("[Wi-Fi] Attempting auto-connection to saved Wi-Fi network...");
+  bool connected = wm.autoConnect(AP_NAME, AP_PASSWORD);
 
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("[Wi-Fi] Connected successfully!");
-    Serial.print("[Wi-Fi] IP Address: http://");
+  if (connected) {
+    Serial.println("[Wi-Fi] ✓ Connected to target Wi-Fi successfully!");
+    Serial.print("[Wi-Fi] Station IP: http://");
     Serial.println(WiFi.localIP());
   } else {
-    Serial.println("[Wi-Fi] Station connection timed out. Starting Fallback Access Point...");
+    Serial.println("[Wi-Fi] Config portal timed out or not configured. Running fallback AP...");
     WiFi.mode(WIFI_AP);
-    WiFi.softAP(AP_SSID, AP_PASSWORD);
-    Serial.printf("[Wi-Fi AP] SSID: %s | Pass: %s\n", AP_SSID, AP_PASSWORD);
+    WiFi.softAP(AP_NAME, AP_PASSWORD);
+    Serial.printf("[Wi-Fi AP] SSID: %s | Pass: %s\n", AP_NAME, AP_PASSWORD);
     Serial.print("[Wi-Fi AP] IP Address: http://");
     Serial.println(WiFi.softAPIP());
   }
 
-  // Start mDNS Responder (advertises http://vega-esp32.local on LAN)
-  if (MDNS.begin("vega-esp32")) {
-    Serial.println("[mDNS] Responder active at http://vega-esp32.local");
+  // --------------------------------------------------------------------------
+  // mDNS RESPONDER INITIALIZATION (http://vega-esp32.local)
+  // --------------------------------------------------------------------------
+  if (MDNS.begin(MDNS_HOSTNAME)) {
+    Serial.printf("[mDNS] Responder active at http://%s.local\n", MDNS_HOSTNAME);
     MDNS.addService("http", "tcp", 80);
     MDNS.addServiceTxt("http", "tcp", "board", "vega-aries-v2");
-    MDNS.addServiceTxt("http", "tcp", "type", "firmware-gateway");
+    MDNS.addServiceTxt("http", "tcp", "type", "vega-programmer");
   } else {
     Serial.println("[mDNS] Warning: Failed to start mDNS responder.");
   }
@@ -321,9 +373,17 @@ void setup() {
   size_t headerKeysCount = sizeof(headerKeys) / sizeof(char*);
   server.collectHeaders(headerKeys, headerKeysCount);
 
-  // Register Web Routes
+  // --------------------------------------------------------------------------
+  // WEB ROUTES REGISTRATION
+  // --------------------------------------------------------------------------
   server.on("/status", HTTP_GET, handleStatus);
   server.on("/status", HTTP_OPTIONS, handleOptions);
+  server.on("/wifiinfo", HTTP_GET, handleWifiInfo);
+  server.on("/wifiinfo", HTTP_OPTIONS, handleOptions);
+  server.on("/changewifi", HTTP_GET, handleResetWifi);
+  server.on("/changewifi", HTTP_OPTIONS, handleOptions);
+  server.on("/reset", HTTP_GET, handleReboot);
+  server.on("/reset", HTTP_OPTIONS, handleOptions);
   server.on("/upload", HTTP_OPTIONS, handleOptions);
   server.on("/upload", HTTP_POST, handleUploadResponse, handleUploadStream);
 

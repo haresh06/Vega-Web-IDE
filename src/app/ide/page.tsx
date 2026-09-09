@@ -224,7 +224,12 @@ export default function IDEPage() {
         } catch {}
       }
 
-      const result = await discoverEsp32(candidateIp);
+      const result = await discoverEsp32(candidateIp, (logMsg) => {
+        if (isManual) {
+          addFlashLog(logMsg);
+        }
+      });
+
       if (result.discovered && result.ip) {
         setDiscoveredDevice(result);
         setDiscoveryStatus('connected');
@@ -233,9 +238,13 @@ export default function IDEPage() {
           localStorage.setItem('vega_ide_esp32_ip', result.ip);
         } catch {}
         healthFailCountRef.current = 0;
+        addFlashLog(`✓ ESP32 Programmer discovered at ${result.ip} (${result.source?.toUpperCase() || 'AUTO'})`);
       } else {
         setDiscoveredDevice(null);
         setDiscoveryStatus('not_found');
+        if (isManual) {
+          addFlashLog('❌ Could not find ESP32 Programmer. Verify Wi-Fi connection or configure via VEGA-PROGRAMMER AP.');
+        }
       }
     } catch {
       setDiscoveredDevice(null);
