@@ -2,10 +2,11 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { Plus, X, Edit2, FileCode, FileText, RotateCw, Usb, Wifi, Settings } from 'lucide-react';
+import { Plus, X, Edit2, FileCode, FileText, RotateCw, Usb, Wifi, Settings, BookOpen } from 'lucide-react';
 import { checkEsp32Status, uploadFirmwareToEsp32 } from '@/lib/esp32/wifi-flasher';
 import { discoverEsp32, checkEsp32Health, probeEsp32Endpoint, DiscoveredEsp32 } from '@/lib/esp32/discovery';
 import VegaLabSetupCard from '@/components/ide/VegaLabSetupCard';
+import LibraryManagerModal from '@/components/ide/LibraryManagerModal';
 import { WebSerialConnection, isWebSerialSupported } from '@/lib/serial/web-serial';
 import { VegaUsbFlasher } from '@/lib/serial/vega-usb-flasher';
 
@@ -176,6 +177,7 @@ export default function IDEPage() {
   const healthFailCountRef = useRef(0);
 
   // Inline file creation state
+  const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
   const [isCreatingFile, setIsCreatingFile] = useState(false);
   const [newFileNameInput, setNewFileNameInput] = useState('');
   const [fileInputError, setFileInputError] = useState<string | null>(null);
@@ -663,6 +665,9 @@ export default function IDEPage() {
         addFlashLog(`  Firmware:   ${data.filename || 'VEGA_ARIES_v2_TEST.bin'}`);
         if (data.compiledFiles && data.compiledFiles.length > 0) {
           addFlashLog(`  Compiled:   ${data.compiledFiles.join(', ')}`);
+        }
+        if (data.libraries && data.libraries.length > 0) {
+          addFlashLog(`  Libraries:  ${data.libraries.join(', ')}`);
         }
         addFlashLog(`  Size:       ${data.binarySize} bytes (${(data.binarySize / 1024).toFixed(2)} KB)`);
         addFlashLog(`  Checksum:   ${data.checksum || 'N/A'}`);
@@ -1289,10 +1294,26 @@ export default function IDEPage() {
           </div>
 
           <div className="fe-board">
-            <div className="fe-header-title" style={{ marginTop: '1.5rem', padding: '0.4rem 1rem' }}>🔧 Board</div>
+            <div className="fe-header-title" style={{ marginTop: '1.25rem', padding: '0.4rem 1rem' }}>🔧 Board</div>
             <div className="fe-board-info">
               <span>ARIES v2</span>
               <span className="badge badge-info" style={{ fontSize: '0.6rem' }}>THEJAS32</span>
+            </div>
+          </div>
+
+          {/* Dedicated Library Manager Section in Left Sidebar */}
+          <div className="fe-libraries-section">
+            <div className="fe-header-title" style={{ marginTop: '1.25rem', padding: '0.4rem 1rem' }}>📚 Libraries</div>
+            <div className="fe-lib-btn-wrap" style={{ padding: '0 0.8rem' }}>
+              <button
+                type="button"
+                className="fe-lib-btn"
+                onClick={() => setIsLibraryModalOpen(true)}
+                title="Open VEGA Library Manager to install C++ libraries (e.g. SPI)"
+              >
+                <BookOpen size={13} className="fe-lib-icon" />
+                <span>Library Manager</span>
+              </button>
             </div>
           </div>
 
@@ -1998,7 +2019,42 @@ export default function IDEPage() {
           overflow-y: auto;
           padding: 0.5rem;
         }
+
+        /* Dedicated Left Sidebar Library Section */
+        .fe-libraries-section {
+          margin-bottom: 0.5rem;
+        }
+        .fe-lib-btn {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          width: 100%;
+          padding: 0.42rem 0.65rem;
+          background: rgba(56, 189, 248, 0.08);
+          border: 1px solid rgba(56, 189, 248, 0.25);
+          border-radius: 6px;
+          color: var(--color-accent-cyan, #38bdf8);
+          font-size: 0.76rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .fe-lib-btn:hover {
+          background: rgba(56, 189, 248, 0.16);
+          border-color: var(--color-accent-cyan, #38bdf8);
+          box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+        }
+        .fe-lib-icon {
+          color: var(--color-accent-cyan, #38bdf8);
+        }
       `}</style>
+
+      {/* Dedicated Library Manager Modal */}
+      <LibraryManagerModal
+        isOpen={isLibraryModalOpen}
+        onClose={() => setIsLibraryModalOpen(false)}
+        helperUrl="http://127.0.0.1:4000"
+      />
     </div>
   );
 }
