@@ -165,6 +165,7 @@ function getStarterTemplate(filename: string): string {
 export default function IDEPage() {
   const [activeFile, setActiveFile] = useState('main.cpp');
   const [files, setFiles] = useState<Record<string, { content: string; language: string }>>(defaultFiles);
+  const [projectName, setProjectName] = useState('LED_Blink');
   const [isHydrated, setIsHydrated] = useState(false);
 
   // ESP32 Automatic Discovery & Dynamic IP States
@@ -336,6 +337,11 @@ export default function IDEPage() {
 
       const savedFilesStr = localStorage.getItem(STORAGE_KEY_FILES);
       const savedActiveFile = localStorage.getItem(STORAGE_KEY_ACTIVE);
+      const savedProjectName = localStorage.getItem('vega_ide_project_name');
+
+      if (savedProjectName) {
+        setProjectName(savedProjectName);
+      }
 
       if (savedFilesStr) {
         const parsed = JSON.parse(savedFilesStr);
@@ -1031,7 +1037,7 @@ export default function IDEPage() {
       <div className="ide-toolbar">
         <div className="toolbar-left">
           <span className="toolbar-title">◆ VEGA Studio</span>
-          <span className="toolbar-project">LED_Blink</span>
+          <span className="toolbar-project">{projectName}</span>
         </div>
         <div className="toolbar-actions">
           {/* Flash Target Toggle: Wi-Fi / OTA (Default) vs USB Direct */}
@@ -1465,9 +1471,17 @@ export default function IDEPage() {
         .ide-page {
           display: flex;
           flex-direction: column;
-          height: calc(100vh - 60px);
+          height: 100vh;
+          width: 100%;
+          max-width: 100%;
           overflow: hidden;
           font-family: 'General Sans', sans-serif;
+        }
+
+        @media (max-width: 900px) {
+          .ide-page {
+            height: calc(100vh - 60px);
+          }
         }
 
         /* Toolbar */
@@ -1755,6 +1769,8 @@ export default function IDEPage() {
         .ide-main {
           display: flex;
           flex: 1;
+          min-width: 0;
+          width: 100%;
           overflow: hidden;
         }
 
@@ -1907,7 +1923,7 @@ export default function IDEPage() {
         }
 
         /* Editor Area */
-        .editor-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .editor-area { flex: 1; min-width: 0; width: 100%; display: flex; flex-direction: column; overflow: hidden; }
         .editor-tabs {
           display: flex;
           align-items: center;
@@ -1916,6 +1932,7 @@ export default function IDEPage() {
           overflow-x: auto;
           flex-shrink: 0;
           height: 38px;
+          width: 100%;
         }
         .editor-tab {
           padding: 0 0.85rem;
@@ -1968,11 +1985,13 @@ export default function IDEPage() {
           color: var(--color-accent-cyan);
           background: rgba(255, 255, 255, 0.04);
         }
-        .editor-container { flex: 1; overflow: hidden; }
+        .editor-container { flex: 1; min-width: 0; width: 100%; overflow: hidden; position: relative; }
 
         /* Bottom Panel */
         .bottom-panel {
           height: 200px;
+          width: 100%;
+          min-width: 0;
           border-top: 1px solid var(--color-border);
           display: flex;
           flex-direction: column;
