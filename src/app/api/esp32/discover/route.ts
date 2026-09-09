@@ -18,30 +18,84 @@ interface DiscoveredResult {
   littlefs_total?: number;
   source?: string;
   message?: string;
+  subnets?: string[];
+}
+
+function ipToInt(ip: string): number {
+  return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0) >>> 0;
+}
+
+function intToIp(int: number): string {
+  return [
+    (int >>> 24) & 255,
+    (int >>> 16) & 255,
+    (int >>> 8) & 255,
+    int & 255,
+  ].join('.');
+}
+
+interface SubnetInfo {
+  interfaceName: string;
+  ip: string;
+  netmask: string;
+  network: string;
+  broadcast: string;
+  hostCount: number;
+  startHost: number;
+  endHost: number;
+}
+
+function getSubnetInfo(ip: string, netmask: string, interfaceName: string): SubnetInfo {
+  const ipNum = ipToInt(ip);
+  const maskNum = ipToInt(netmask);
+  const networkNum = (ipNum & maskNum) >>> 0;
+  const broadcastNum = (networkNum | (~maskNum >>> 0)) >>> 0;
+  const hostCount = Math.max(0, broadcastNum - networkNum - 1);
+
+  return {
+    interfaceName,
+    ip,
+    netmask,
+    network: intToIp(networkNum),
+    broadcast: intToIp(broadcastNum),
+    hostCount,
+    startHost: networkNum + 1,
+    endHost: broadcastNum - 1,
+  };
 }
 
 /**
- * Dynamically extract local IPv4 subnets from active host network interfaces
+ * Dynamically extract active host IPv4 interfaces and calculate accurate subnets from IP + netmask
  */
-function getLocalSubnetPrefixes(): string[] {
+function getActiveNetworkSubnets(): SubnetInfo[] {
   const interfaces = os.networkInterfaces();
-  const prefixes: string[] = [];
+  const subnets: SubnetInfo[] = [];
 
-  for (const [, addrs] of Object.entries(interfaces)) {
+  for (const [name, addrs] of Object.entries(interfaces)) {
     if (!addrs) continue;
+    const lowerName = name.toLowerCase();
+    // Ignore virtual, loopback, docker, wsl interfaces
+    if (
+      lowerName.includes('loopback') ||
+      lowerName.includes('vethernet') ||
+      lowerName.includes('docker') ||
+      lowerName.includes('wsl') ||
+      lowerName.includes('hyper-v') ||
+      lowerName.includes('tap') ||
+      lowerName.includes('vmware')
+    ) {
+      continue;
+    }
+
     for (const addr of addrs) {
       if (addr.family === 'IPv4' && !addr.internal) {
-        const parts = addr.address.split('.');
-        if (parts.length === 4) {
-          const prefix = `${parts[0]}.${parts[1]}.${parts[2]}`;
-          if (!prefixes.includes(prefix)) {
-            prefixes.push(prefix);
-          }
-        }
+        if (addr.address.startsWith('169.254.') || addr.address.startsWith('127.')) continue;
+        const info = getSubnetInfo(addr.address, addr.netmask, name);
+        subnets.push(info);
       }
     }
   }
-  return prefixes;
+  return subnets;
 }
 
 /**
@@ -60,7 +114,8 @@ function getArpCacheIps(): string[] {
         !ip.startsWith('224.') &&
         !ip.startsWith('239.') &&
         !ip.startsWith('255.') &&
-        !ip.startsWith('127.')
+        !ip.startsWith('127.') &&
+        !ip.startsWith('169.254.')
       ) {
         ips.push(ip);
       }
@@ -74,10 +129,11 @@ function getArpCacheIps(): string[] {
 /**
  * Probe an IP or hostname via HTTP GET /status and verify the ESP32 signature
  */
-function probeDevice(target: string, timeoutMs = 350): Promise<{ valid: boolean; data?: any }> {
+function probeDevice(target: string, timeoutMs = 2000): Promise<{ valid: boolean; data?: any }> {
   return new Promise((resolve) => {
     let completed = false;
-    const url = target.startsWith('http://') ? `${target}/status` : `http://${target}/status`;
+    const cleanTarget = target.replace(/^https?:\/\//i, '').replace(/\/.*$/, '');
+    const url = `http://${cleanTarget}/status`;
 
     const req = http.get(url, { timeout: timeoutMs }, (res) => {
       let body = '';
@@ -92,9 +148,12 @@ function probeDevice(target: string, timeoutMs = 350): Promise<{ valid: boolean;
                 json &&
                 (json.status === 'ready' ||
                   json.status === 'busy' ||
-                  json.chip ||
+                  json.status === 'ok' ||
+                  typeof json.chip === 'string' ||
                   typeof json.littlefs_total === 'number' ||
-                  json.firmware)
+                  json.firmware !== undefined ||
+                  json.vega_connected !== undefined ||
+                  json.mode !== undefined)
               ) {
                 return resolve({ valid: true, data: json });
               }
@@ -124,7 +183,7 @@ function probeDevice(target: string, timeoutMs = 350): Promise<{ valid: boolean;
   });
 }
 
-function quickDnsLookup(host: string, timeoutMs = 600): Promise<string | null> {
+function quickDnsLookup(host: string, timeoutMs = 800): Promise<string | null> {
   return new Promise((resolve) => {
     let done = false;
     const timer = setTimeout(() => {
@@ -144,10 +203,35 @@ function quickDnsLookup(host: string, timeoutMs = 600): Promise<string | null> {
   });
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const targetParam = url.searchParams.get('target')?.trim();
+
+  // --------------------------------------------------------------------------
+  // TARGET PROBE (Cached IP or Explicit Target)
+  // If target parameter is provided, probe directly first regardless of subnet!
+  // --------------------------------------------------------------------------
+  if (targetParam) {
+    const targetCheck = await probeDevice(targetParam, 2500);
+    if (targetCheck.valid && targetCheck.data) {
+      const discoveredIp = targetCheck.data.ip || targetParam.replace(/^https?:\/\//i, '').replace(/\/.*$/, '');
+      return NextResponse.json<DiscoveredResult>({
+        found: true,
+        ip: discoveredIp,
+        address: `http://${discoveredIp}`,
+        chip: targetCheck.data.chip,
+        mode: targetCheck.data.mode,
+        rssi: targetCheck.data.rssi,
+        status: targetCheck.data.status,
+        littlefs_free: targetCheck.data.littlefs_free,
+        littlefs_total: targetCheck.data.littlefs_total,
+        source: 'cached',
+      });
+    }
+  }
+
   // --------------------------------------------------------------------------
   // CLOUD ENVIRONMENT DETECTION (Vercel Serverless / AWS Lambda)
-  // Serverless functions in the cloud cannot access user's private local LAN.
   // --------------------------------------------------------------------------
   const isCloud = process.env.VERCEL === '1' || process.env.NOW_REGION || process.env.AWS_LAMBDA_FUNCTION_NAME;
   if (isCloud) {
@@ -158,20 +242,20 @@ export async function GET() {
   }
 
   // --------------------------------------------------------------------------
-  // STAGE 1 & 2 (PARALLEL): mDNS Hostnames + ARP Cache IPs + SoftAP
+  // STAGE 1: mDNS Hostnames + ARP Cache IPs + SoftAP Default Gateway
   // --------------------------------------------------------------------------
-  const mdnsCandidates = ['vega-esp32.local', 'vega-gateway.local', 'esp32.local'];
+  const mdnsCandidates = ['vega-esp32.local', 'vega-esp32', 'vega-gateway.local', 'esp32.local'];
   const arpIps = getArpCacheIps();
   const fastCandidates = [...new Set([...mdnsCandidates, ...arpIps, '192.168.4.1'])];
 
   const fastResults = await Promise.all(
     fastCandidates.map(async (candidate) => {
       let target = candidate;
-      if (candidate.endsWith('.local')) {
-        const resolved = await quickDnsLookup(candidate, 500);
+      if (candidate.endsWith('.local') || candidate === 'vega-esp32') {
+        const resolved = await quickDnsLookup(candidate, 600);
         if (resolved) target = resolved;
       }
-      const check = await probeDevice(target, 400);
+      const check = await probeDevice(target, 1200);
       return { target, candidate, ...check };
     })
   );
@@ -189,32 +273,45 @@ export async function GET() {
       status: fastFound.data.status,
       littlefs_free: fastFound.data.littlefs_free,
       littlefs_total: fastFound.data.littlefs_total,
-      source: fastFound.candidate.includes('.local') ? 'mdns' : 'arp',
+      source: fastFound.candidate.includes('.local') || fastFound.candidate === 'vega-esp32' ? 'mdns' : 'arp',
     });
   }
 
   // --------------------------------------------------------------------------
-  // STAGE 3: Full Dynamic Subnet Parallel Sweep (Derived from os.networkInterfaces)
+  // STAGE 2: Dynamic Local Subnet Sweep (Calculated from IP + netmask)
   // --------------------------------------------------------------------------
-  const subnetPrefixes = getLocalSubnetPrefixes();
+  const subnets = getActiveNetworkSubnets();
   const candidateIps: string[] = [];
 
-  for (const prefix of subnetPrefixes) {
-    for (let i = 1; i <= 254; i++) {
-      const ip = `${prefix}.${i}`;
-      if (!fastCandidates.includes(ip)) {
-        candidateIps.push(ip);
+  for (const sub of subnets) {
+    // If subnet size is reasonable (e.g. <= 512 hosts like /24 or /23), scan all hosts
+    if (sub.hostCount <= 512) {
+      for (let i = sub.startHost; i <= sub.endHost; i++) {
+        const ip = intToIp(i);
+        if (!fastCandidates.includes(ip)) {
+          candidateIps.push(ip);
+        }
+      }
+    } else {
+      // For larger enterprise subnets (e.g. /21 or /16), scan the host's /24 block + high priority boundaries
+      const baseIpNum = ipToInt(sub.ip);
+      const hostSubnetBase = (baseIpNum & 0xffffff00) >>> 0;
+      for (let i = 1; i <= 254; i++) {
+        const ip = intToIp(hostSubnetBase + i);
+        if (!fastCandidates.includes(ip)) {
+          candidateIps.push(ip);
+        }
       }
     }
   }
 
-  // Concurrently probe subnet in batches of 70 with 300ms timeout (< 1.2s total)
-  const batchSize = 70;
+  // Concurrently probe candidates in batches of 40 with 600ms timeout
+  const batchSize = 40;
   for (let i = 0; i < candidateIps.length; i += batchSize) {
     const batch = candidateIps.slice(i, i + batchSize);
     const results = await Promise.all(
       batch.map(async (ip) => {
-        const check = await probeDevice(ip, 300);
+        const check = await probeDevice(ip, 600);
         return { ip, ...check };
       })
     );
@@ -239,6 +336,7 @@ export async function GET() {
 
   return NextResponse.json<DiscoveredResult>({
     found: false,
-    message: 'No VEGA ESP32 gateway found on active local subnet or mDNS.',
+    message: 'No VEGA ESP32 gateway found on active local subnets or mDNS.',
+    subnets: subnets.map((s) => `${s.interfaceName}: ${s.network} (${s.ip}/${s.netmask})`),
   });
 }
