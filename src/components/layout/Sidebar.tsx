@@ -11,7 +11,6 @@ import {
   FlaskConical,
   Code2,
   Trophy,
-  Radio,
   Cpu,
   Wrench,
   LayoutDashboard,
@@ -54,7 +53,6 @@ const navGroups: NavGroup[] = [
   {
     title: 'HARDWARE & LABS',
     items: [
-      { href: '/ota', label: 'OTA Firmware Flash', icon: Radio },
       { href: '/boards', label: 'VEGA ARIES v2', icon: Cpu },
       { href: '/troubleshoot', label: 'Troubleshoot Guide', icon: Wrench },
     ],

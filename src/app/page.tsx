@@ -246,7 +246,7 @@ export default function HomePage() {
       title: 'OTA FIRMWARE FLASH',
       desc: 'Wireless over-the-air firmware deployment through the ESP32 wireless bridge using the XMODEM protocol.',
       tag: 'Wi-Fi → ESP32 Bridge',
-      href: '/ota',
+      href: '/ide',
       color: '#38bdf8',
     },
     {

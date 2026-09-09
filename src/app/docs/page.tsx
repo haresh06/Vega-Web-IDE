@@ -278,12 +278,12 @@ export default function DocsPage() {
           </Link>
 
           {/* Card 6: OTA with ESP32-S3 */}
-          <Link href="/ota" className="fw-card fw-card-highlight">
+          <Link href="/ide" className="fw-card fw-card-highlight">
             <div className="fw-icon-box fw-icon-ota">
               <Wifi size={18} />
             </div>
             <h4>OTA with ESP32-S3</h4>
-            <p>Wireless firmware update architecture</p>
+            <p>Wireless firmware flashing in VEGA Studio IDE</p>
           </Link>
         </div>
       </section>
