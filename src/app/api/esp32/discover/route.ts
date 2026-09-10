@@ -6,6 +6,18 @@ import { execSync } from 'child_process';
 
 export const dynamic = 'force-dynamic';
 
+export interface ActiveSubnetInfo {
+  interfaceName: string;
+  ip: string;
+  netmask: string;
+  network: string;
+  broadcast: string;
+  prefix: string; // e.g. "10.17.227" or "192.168.1"
+  hostCount: number;
+  startHost: number;
+  endHost: number;
+}
+
 interface DiscoveredResult {
   found: boolean;
   ip?: string;
@@ -18,7 +30,8 @@ interface DiscoveredResult {
   littlefs_total?: number;
   source?: string;
   message?: string;
-  subnets?: string[];
+  subnets?: ActiveSubnetInfo[];
+  arpIps?: string[];
 }
 
 function ipToInt(ip: string): number {
@@ -34,23 +47,14 @@ function intToIp(int: number): string {
   ].join('.');
 }
 
-interface SubnetInfo {
-  interfaceName: string;
-  ip: string;
-  netmask: string;
-  network: string;
-  broadcast: string;
-  hostCount: number;
-  startHost: number;
-  endHost: number;
-}
-
-function getSubnetInfo(ip: string, netmask: string, interfaceName: string): SubnetInfo {
+function getSubnetInfo(ip: string, netmask: string, interfaceName: string): ActiveSubnetInfo {
   const ipNum = ipToInt(ip);
   const maskNum = ipToInt(netmask);
   const networkNum = (ipNum & maskNum) >>> 0;
   const broadcastNum = (networkNum | (~maskNum >>> 0)) >>> 0;
   const hostCount = Math.max(0, broadcastNum - networkNum - 1);
+  const parts = ip.split('.');
+  const prefix = parts.length === 4 ? `${parts[0]}.${parts[1]}.${parts[2]}` : ip;
 
   return {
     interfaceName,
@@ -58,6 +62,7 @@ function getSubnetInfo(ip: string, netmask: string, interfaceName: string): Subn
     netmask,
     network: intToIp(networkNum),
     broadcast: intToIp(broadcastNum),
+    prefix,
     hostCount,
     startHost: networkNum + 1,
     endHost: broadcastNum - 1,
@@ -67,9 +72,9 @@ function getSubnetInfo(ip: string, netmask: string, interfaceName: string): Subn
 /**
  * Dynamically extract active host IPv4 interfaces and calculate accurate subnets from IP + netmask
  */
-function getActiveNetworkSubnets(): SubnetInfo[] {
+function getActiveNetworkSubnets(): ActiveSubnetInfo[] {
   const interfaces = os.networkInterfaces();
-  const subnets: SubnetInfo[] = [];
+  const subnets: ActiveSubnetInfo[] = [];
 
   for (const [name, addrs] of Object.entries(interfaces)) {
     if (!addrs) continue;
@@ -129,7 +134,7 @@ function getArpCacheIps(): string[] {
 /**
  * Probe an IP or hostname via HTTP GET /status and verify the ESP32 signature
  */
-function probeDevice(target: string, timeoutMs = 2000): Promise<{ valid: boolean; data?: any }> {
+function probeDevice(target: string, timeoutMs = 1500): Promise<{ valid: boolean; data?: any }> {
   return new Promise((resolve) => {
     let completed = false;
     const cleanTarget = target.replace(/^https?:\/\//i, '').replace(/\/.*$/, '');
@@ -183,7 +188,7 @@ function probeDevice(target: string, timeoutMs = 2000): Promise<{ valid: boolean
   });
 }
 
-function quickDnsLookup(host: string, timeoutMs = 800): Promise<string | null> {
+function quickDnsLookup(host: string, timeoutMs = 600): Promise<string | null> {
   return new Promise((resolve) => {
     let done = false;
     const timer = setTimeout(() => {
@@ -206,13 +211,25 @@ function quickDnsLookup(host: string, timeoutMs = 800): Promise<string | null> {
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const targetParam = url.searchParams.get('target')?.trim();
+  const infoOnly = url.searchParams.get('info') === 'true';
+
+  const subnets = getActiveNetworkSubnets();
+  const arpIps = getArpCacheIps();
+
+  // If client only requested network topology / active subnets
+  if (infoOnly) {
+    return NextResponse.json({
+      subnets,
+      arpIps,
+    });
+  }
 
   // --------------------------------------------------------------------------
   // TARGET PROBE (Cached IP or Explicit Target)
-  // If target parameter is provided, probe directly first regardless of subnet!
+  // If target parameter is provided, probe directly first
   // --------------------------------------------------------------------------
   if (targetParam) {
-    const targetCheck = await probeDevice(targetParam, 2500);
+    const targetCheck = await probeDevice(targetParam, 1800);
     if (targetCheck.valid && targetCheck.data) {
       const discoveredIp = targetCheck.data.ip || targetParam.replace(/^https?:\/\//i, '').replace(/\/.*$/, '');
       return NextResponse.json<DiscoveredResult>({
@@ -226,6 +243,8 @@ export async function GET(req: Request) {
         littlefs_free: targetCheck.data.littlefs_free,
         littlefs_total: targetCheck.data.littlefs_total,
         source: 'cached',
+        subnets,
+        arpIps,
       });
     }
   }
@@ -245,17 +264,16 @@ export async function GET(req: Request) {
   // STAGE 1: mDNS Hostnames + ARP Cache IPs + SoftAP Default Gateway
   // --------------------------------------------------------------------------
   const mdnsCandidates = ['vega-esp32.local', 'vega-esp32', 'vega-gateway.local', 'esp32.local'];
-  const arpIps = getArpCacheIps();
   const fastCandidates = [...new Set([...mdnsCandidates, ...arpIps, '192.168.4.1'])];
 
   const fastResults = await Promise.all(
     fastCandidates.map(async (candidate) => {
       let target = candidate;
       if (candidate.endsWith('.local') || candidate === 'vega-esp32') {
-        const resolved = await quickDnsLookup(candidate, 600);
+        const resolved = await quickDnsLookup(candidate, 500);
         if (resolved) target = resolved;
       }
-      const check = await probeDevice(target, 1200);
+      const check = await probeDevice(target, 1000);
       return { target, candidate, ...check };
     })
   );
@@ -274,17 +292,18 @@ export async function GET(req: Request) {
       littlefs_free: fastFound.data.littlefs_free,
       littlefs_total: fastFound.data.littlefs_total,
       source: fastFound.candidate.includes('.local') || fastFound.candidate === 'vega-esp32' ? 'mdns' : 'arp',
+      subnets,
+      arpIps,
     });
   }
 
   // --------------------------------------------------------------------------
   // STAGE 2: Dynamic Local Subnet Sweep (Calculated from IP + netmask)
   // --------------------------------------------------------------------------
-  const subnets = getActiveNetworkSubnets();
   const candidateIps: string[] = [];
 
   for (const sub of subnets) {
-    // If subnet size is reasonable (e.g. <= 512 hosts like /24 or /23), scan all hosts
+    // If subnet size is <= 512 hosts (e.g. /24 or /23), scan all hosts
     if (sub.hostCount <= 512) {
       for (let i = sub.startHost; i <= sub.endHost; i++) {
         const ip = intToIp(i);
@@ -293,7 +312,7 @@ export async function GET(req: Request) {
         }
       }
     } else {
-      // For larger enterprise subnets (e.g. /21 or /16), scan the host's /24 block + high priority boundaries
+      // For larger enterprise subnets (/21, /16), scan the host's /24 block + high priority ranges
       const baseIpNum = ipToInt(sub.ip);
       const hostSubnetBase = (baseIpNum & 0xffffff00) >>> 0;
       for (let i = 1; i <= 254; i++) {
@@ -305,13 +324,13 @@ export async function GET(req: Request) {
     }
   }
 
-  // Concurrently probe candidates in batches of 40 with 600ms timeout
-  const batchSize = 40;
+  // Concurrently probe candidates in batches of 45 with 500ms timeout
+  const batchSize = 45;
   for (let i = 0; i < candidateIps.length; i += batchSize) {
     const batch = candidateIps.slice(i, i + batchSize);
     const results = await Promise.all(
       batch.map(async (ip) => {
-        const check = await probeDevice(ip, 600);
+        const check = await probeDevice(ip, 500);
         return { ip, ...check };
       })
     );
@@ -330,6 +349,8 @@ export async function GET(req: Request) {
         littlefs_free: found.data.littlefs_free,
         littlefs_total: found.data.littlefs_total,
         source: 'subnet-scan',
+        subnets,
+        arpIps,
       });
     }
   }
@@ -337,6 +358,7 @@ export async function GET(req: Request) {
   return NextResponse.json<DiscoveredResult>({
     found: false,
     message: 'No VEGA ESP32 gateway found on active local subnets or mDNS.',
-    subnets: subnets.map((s) => `${s.interfaceName}: ${s.network} (${s.ip}/${s.netmask})`),
+    subnets,
+    arpIps,
   });
 }

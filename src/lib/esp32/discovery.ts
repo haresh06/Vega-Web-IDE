@@ -3,15 +3,16 @@
  * VEGA ARIES v2 - Automatic ESP32-S3 Gateway Discovery Engine
  * ============================================================================
  * 
- * Automatically detects the ESP32-S3 gateway on the local Wi-Fi / LAN without
- * requiring the user to type or hardcode dynamic DHCP IP addresses.
+ * Automatically detects the ESP32-S3 gateway on ANY compatible Wi-Fi / LAN
+ * (10.x.x.x, 172.16-31.x.x, 192.168.x.x, with /24, /23, /22, /21, /16 masks)
+ * without requiring the user to type or hardcode dynamic DHCP IP addresses.
  * 
  * Multi-Stage Discovery Pipeline:
- *  Stage 1: Cached / Preferred IP Direct Probe (Accepts any reachable routed IP)
- *  Stage 2: Standard mDNS & Fallback Hostnames Probe (http://vega-esp32.local/status)
- *  Stage 3: Next.js Server-side / Local Helper API Bridge (/api/esp32/discover)
- *  Stage 4: Dynamically Detected Subnet & Common Subnet Fast Sweep
- *  Stage 5: Manual IP Fallback (Settings Gear in UI)
+ *  1. Quick Probe of Previously Cached IP (fast check, discarded if dead)
+ *  2. Parallel mDNS & SoftAP Candidates (http://vega-esp32.local/status)
+ *  3. Local Helper (http://127.0.0.1:4000/esp32/discover) & Server API Bridge
+ *  4. Dynamically Detected Active Subnet Fast Sweep (Derived from host interfaces)
+ *  5. Manual IP Fallback (Settings Gear in UI)
  * ============================================================================
  */
 
@@ -30,6 +31,18 @@ export interface DiscoveredEsp32 {
   source?: 'cached' | 'mdns' | 'api' | 'ap' | 'arp' | 'subnet-scan' | 'direct';
 }
 
+export interface ActiveSubnetInfo {
+  interfaceName: string;
+  ip: string;
+  netmask: string;
+  network: string;
+  broadcast: string;
+  prefix: string;
+  hostCount: number;
+  startHost: number;
+  endHost: number;
+}
+
 const MDNS_CANDIDATES = [
   'http://vega-esp32.local',
   'http://vega-esp32',
@@ -38,19 +51,7 @@ const MDNS_CANDIDATES = [
   'http://192.168.4.1', // SoftAP default gateway
 ];
 
-// Common 2.4 GHz Wi-Fi Router & Mobile Hotspot Subnets
-const COMMON_SUBNET_PREFIXES = [
-  '192.168.1',   // Standard Home & Office Routers
-  '192.168.0',   // TP-Link, D-Link, Netgear Routers
-  '192.168.43',  // Android Mobile Hotspots (Moto Edge, Vivo, Samsung, Xiaomi)
-  '10.17.227',   // Campus / Lab / Hotspot Subnets
-  '10.0.0',      // Xfinity / Mesh / Enterprise Routers
-  '172.20.10',   // iOS / iPhone Personal Hotspots
-  '192.168.137', // Windows PC Mobile Hotspots
-  '192.168.2',   // Belkin / Edimax Routers
-  '192.168.31',  // Mi Routers
-  '192.168.8',   // Huawei 4G/5G Dongles & Gateways
-];
+const LOCAL_HELPER_DISCOVER_URL = 'http://127.0.0.1:4000/esp32/discover';
 
 /**
  * Validates whether a response comes from an authentic VEGA ESP32 Programmer
@@ -77,7 +78,7 @@ export function isValidVegaEsp32Response(data: unknown): data is Esp32StatusResp
  */
 async function probeEndpoint(
   baseUrl: string,
-  timeoutMs = 3000,
+  timeoutMs = 1800,
   sourceOverride?: DiscoveredEsp32['source']
 ): Promise<DiscoveredEsp32 | null> {
   const formattedUrl = formatEsp32Url(baseUrl);
@@ -126,9 +127,57 @@ async function probeEndpoint(
 }
 
 /**
- * Query the Next.js server-side / local helper discovery bridge
+ * Query the local VEGA Lab helper at http://127.0.0.1:4000/esp32/discover
  */
-async function probeServerDiscovery(target?: string, timeoutMs = 3500): Promise<DiscoveredEsp32 | null> {
+async function probeLocalHelper(target?: string, timeoutMs = 2500): Promise<DiscoveredEsp32 | null> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  const endpointUrl = target
+    ? `${LOCAL_HELPER_DISCOVER_URL}?target=${encodeURIComponent(target)}`
+    : LOCAL_HELPER_DISCOVER_URL;
+
+  try {
+    const res = await fetch(endpointUrl, {
+      method: 'GET',
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+    });
+
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.ip) {
+        const st = data.status || {};
+        return {
+          discovered: true,
+          ip: data.ip,
+          address: `http://${data.ip}`,
+          chip: st.chip,
+          mode: st.mode,
+          rssi: st.rssi,
+          status: st.status,
+          littlefs_free: st.littlefs_free,
+          littlefs_total: st.littlefs_total,
+          source: 'api',
+        };
+      }
+    }
+  } catch {
+    clearTimeout(timeoutId);
+  }
+  return null;
+}
+
+/**
+ * Query the Next.js server-side discovery bridge
+ */
+async function probeServerDiscovery(
+  target?: string,
+  timeoutMs = 2500
+): Promise<{ result: DiscoveredEsp32 | null; subnets?: ActiveSubnetInfo[]; arpIps?: string[] }> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -148,58 +197,73 @@ async function probeServerDiscovery(target?: string, timeoutMs = 3500): Promise<
 
     if (res.ok) {
       const result = await res.json();
+      const subnets: ActiveSubnetInfo[] = result.subnets || [];
+      const arpIps: string[] = result.arpIps || [];
+
       if (result.found && result.ip) {
         const data = result.data || {};
         return {
-          discovered: true,
-          ip: result.ip,
-          address: result.address || `http://${result.ip}`,
-          chip: data.chip || result.chip,
-          mode: data.mode || result.mode,
-          rssi: data.rssi || result.rssi,
-          status: data.status || result.status,
-          littlefs_free: data.littlefs_free || result.littlefs_free,
-          littlefs_total: data.littlefs_total || result.littlefs_total,
-          source: result.source || 'api',
+          result: {
+            discovered: true,
+            ip: result.ip,
+            address: result.address || `http://${result.ip}`,
+            chip: data.chip || result.chip,
+            mode: data.mode || result.mode,
+            rssi: data.rssi || result.rssi,
+            status: data.status || result.status,
+            littlefs_free: data.littlefs_free || result.littlefs_free,
+            littlefs_total: data.littlefs_total || result.littlefs_total,
+            source: result.source || 'api',
+          },
+          subnets,
+          arpIps,
         };
       }
+      return { result: null, subnets, arpIps };
     }
   } catch {
     clearTimeout(timeoutId);
   }
-  return null;
+  return { result: null };
 }
 
 /**
  * Detect client local IPv4 address via WebRTC ICE candidate
  */
-async function detectBrowserLocalIp(): Promise<string | null> {
-  if (typeof window === 'undefined' || typeof RTCPeerConnection === 'undefined') return null;
+async function detectBrowserLocalIps(): Promise<string[]> {
+  if (typeof window === 'undefined' || typeof RTCPeerConnection === 'undefined') return [];
   return new Promise((resolve) => {
+    const detectedIps: string[] = [];
     try {
       const pc = new RTCPeerConnection({ iceServers: [] });
       pc.createDataChannel('');
       pc.createOffer()
         .then((offer) => pc.setLocalDescription(offer))
-        .catch(() => resolve(null));
+        .catch(() => resolve([]));
 
       const timer = setTimeout(() => {
         try { pc.close(); } catch {}
-        resolve(null);
-      }, 700);
+        resolve(detectedIps);
+      }, 600);
 
       pc.onicecandidate = (event) => {
         if (!event || !event.candidate) return;
         const candidate = event.candidate.candidate;
         const match = candidate.match(/([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/);
-        if (match && match[1] && !match[1].startsWith('127.') && !match[1].startsWith('0.') && !match[1].startsWith('169.254.')) {
-          clearTimeout(timer);
-          try { pc.close(); } catch {}
-          resolve(match[1]);
+        if (
+          match &&
+          match[1] &&
+          !match[1].startsWith('127.') &&
+          !match[1].startsWith('0.') &&
+          !match[1].startsWith('169.254.')
+        ) {
+          if (!detectedIps.includes(match[1])) {
+            detectedIps.push(match[1]);
+          }
         }
       };
     } catch {
-      resolve(null);
+      resolve([]);
     }
   });
 }
@@ -208,23 +272,43 @@ async function detectBrowserLocalIp(): Promise<string | null> {
  * Direct Browser Subnet Fast Sweep
  * Concurrently scans active Wi-Fi subnets for /status in batches
  */
-async function scanSubnetFromBrowser(onLog?: (msg: string) => void): Promise<DiscoveredEsp32 | null> {
-  const localIp = await detectBrowserLocalIp();
-  const prefixes = [...COMMON_SUBNET_PREFIXES];
+async function scanSubnetFromBrowser(
+  dynamicPrefixes: string[],
+  arpIps: string[],
+  onLog?: (msg: string) => void
+): Promise<DiscoveredEsp32 | null> {
+  const browserIps = await detectBrowserLocalIps();
+  const prefixes = [...dynamicPrefixes];
 
-  if (localIp) {
-    const parts = localIp.split('.');
+  for (const bIp of browserIps) {
+    const parts = bIp.split('.');
     if (parts.length === 4) {
-      const dynamicPrefix = `${parts[0]}.${parts[1]}.${parts[2]}`;
-      if (!prefixes.includes(dynamicPrefix)) {
-        prefixes.unshift(dynamicPrefix); // Prioritize detected laptop subnet!
+      const prefix = `${parts[0]}.${parts[1]}.${parts[2]}`;
+      if (!prefixes.includes(prefix)) {
+        prefixes.unshift(prefix); // Prioritize detected laptop active subnet!
       }
     }
   }
 
-  onLog?.(`[ESP32 Discovery] Probing local network subnets (${prefixes.slice(0, 3).join(', ')})...`);
+  // Fallback common 2.4GHz hotspot & router subnets only if no active subnets discovered
+  if (prefixes.length === 0) {
+    prefixes.push('192.168.1', '192.168.0', '192.168.43', '10.0.0', '172.20.10');
+  }
 
-  for (const prefix of prefixes.slice(0, 5)) {
+  onLog?.(`[ESP32 Discovery] Probing active local network (${prefixes.slice(0, 3).join(', ')})...`);
+
+  // First probe any ARP candidates directly
+  if (arpIps.length > 0) {
+    const arpPromises = arpIps.map((ip) => probeEndpoint(`http://${ip}`, 600, 'arp'));
+    const arpResults = await Promise.all(arpPromises);
+    const arpFound = arpResults.find((r): r is DiscoveredEsp32 => r !== null && r.discovered);
+    if (arpFound) {
+      onLog?.(`[ESP32 Discovery] ✓ Found VEGA Programmer at ${arpFound.ip} (ARP Cache)`);
+      return arpFound;
+    }
+  }
+
+  for (const prefix of prefixes.slice(0, 4)) {
     // Generate prioritized host IP list: gateway (.1), low DHCP (.2 - .35), common DHCP (.100 - .150, .200 - .254)
     const highPriorityIps: string[] = [
       `${prefix}.1`,
@@ -235,6 +319,7 @@ async function scanSubnetFromBrowser(onLog?: (msg: string) => void): Promise<Dis
       `${prefix}.10`,
       `${prefix}.15`,
       `${prefix}.20`,
+      `${prefix}.25`,
       `${prefix}.35`,
       `${prefix}.42`,
       `${prefix}.100`,
@@ -260,11 +345,11 @@ async function scanSubnetFromBrowser(onLog?: (msg: string) => void): Promise<Dis
 
     const candidateList = [...highPriorityIps, ...fullSubnetIps];
 
-    // Probe in parallel batches of 30 with 500ms timeout
-    const batchSize = 30;
+    // Probe in parallel batches of 35 with 450ms timeout
+    const batchSize = 35;
     for (let i = 0; i < candidateList.length; i += batchSize) {
       const batch = candidateList.slice(i, i + batchSize);
-      const batchPromises = batch.map((ip) => probeEndpoint(`http://${ip}`, 500, 'subnet-scan'));
+      const batchPromises = batch.map((ip) => probeEndpoint(`http://${ip}`, 450, 'subnet-scan'));
 
       const results = await Promise.all(batchPromises);
       const found = results.find((r): r is DiscoveredEsp32 => r !== null && r.discovered);
@@ -280,7 +365,7 @@ async function scanSubnetFromBrowser(onLog?: (msg: string) => void): Promise<Dis
 
 /**
  * Main Automatic Discovery Function
- * Implements Stage 1 -> 2 -> 3 -> 4 with complete fallback and signature validation
+ * Implements complete network-independent discovery pipeline
  */
 export async function discoverEsp32(
   preferredIpOrUrl?: string,
@@ -289,8 +374,8 @@ export async function discoverEsp32(
   onLog?.('[ESP32 Discovery] Starting automatic discovery...');
 
   // --------------------------------------------------------------------------
-  // STAGE 1: Cached / Preferred IP Probe
-  // Directly test cached IP regardless of whether subnets match (routed network support)
+  // STAGE 1: Quick Cached / Preferred IP Probe (Fast Check)
+  // If the user changed Wi-Fi, the old IP will fail quickly (~1200ms) and be discarded.
   // --------------------------------------------------------------------------
   let savedCandidate = preferredIpOrUrl?.trim();
   if (!savedCandidate && typeof window !== 'undefined') {
@@ -300,15 +385,15 @@ export async function discoverEsp32(
   }
 
   if (savedCandidate) {
-    onLog?.(`[ESP32 Discovery] Testing cached ESP32 endpoint: ${savedCandidate}...`);
+    onLog?.(`[ESP32 Discovery] Quick check on cached IP: ${savedCandidate}...`);
 
-    // Probe both direct browser fetch and server-side bridge in parallel with generous timeout
-    const [directResult, apiResult] = await Promise.all([
-      probeEndpoint(savedCandidate, 3500, 'cached'),
-      probeServerDiscovery(savedCandidate, 3500),
+    const [directResult, helperResult, apiProbe] = await Promise.all([
+      probeEndpoint(savedCandidate, 1400, 'cached'),
+      probeLocalHelper(savedCandidate, 1400),
+      probeServerDiscovery(savedCandidate, 1400),
     ]);
 
-    const cachedSuccess = directResult || apiResult;
+    const cachedSuccess = directResult || helperResult || apiProbe.result;
     if (cachedSuccess && cachedSuccess.discovered && cachedSuccess.ip) {
       onLog?.(`[ESP32 Discovery] ✓ Connected to cached ESP32 at ${cachedSuccess.ip}`);
       if (typeof window !== 'undefined') {
@@ -318,37 +403,73 @@ export async function discoverEsp32(
       }
       return cachedSuccess;
     }
-    onLog?.('[ESP32 Discovery] Cached IP unresponsive. Probing mDNS & local network...');
+    onLog?.('[ESP32 Discovery] Cached IP unresponsive. Detecting active Wi-Fi network...');
   }
 
   // --------------------------------------------------------------------------
-  // STAGE 2 & 3: mDNS Hostnames + SoftAP + Server/Helper API Bridge
+  // STAGE 2 & 3: mDNS Hostnames + Local Helper + SoftAP + Dynamic Topology Bridge
   // --------------------------------------------------------------------------
-  onLog?.('[ESP32 Discovery] Probing mDNS (http://vega-esp32.local) & local network bridge...');
+  onLog?.('[ESP32 Discovery] Probing local helper (http://127.0.0.1:4000), mDNS & network bridge...');
 
-  const fastPromises: Promise<DiscoveredEsp32 | null>[] = [
-    probeServerDiscovery(undefined, 3500),
-    ...MDNS_CANDIDATES.map((candidate) => probeEndpoint(candidate, 2500)),
+  const fastPromises: [
+    Promise<DiscoveredEsp32 | null>,
+    Promise<{ result: DiscoveredEsp32 | null; subnets?: ActiveSubnetInfo[]; arpIps?: string[] }>,
+    ...Promise<DiscoveredEsp32 | null>[]
+  ] = [
+    probeLocalHelper(undefined, 2500),
+    probeServerDiscovery(undefined, 2200),
+    ...MDNS_CANDIDATES.map((candidate) => probeEndpoint(candidate, 1800)),
   ];
 
+  let detectedSubnetPrefixes: string[] = [];
+  let detectedArpIps: string[] = [];
+
   try {
-    const fastResults = await Promise.all(fastPromises);
-    const validFast = fastResults.find((r): r is DiscoveredEsp32 => r !== null && r.discovered);
-    if (validFast && validFast.ip) {
-      onLog?.(`[ESP32 Discovery] ✓ Discovered VEGA Programmer at ${validFast.ip} (${validFast.source?.toUpperCase()})`);
+    const [helperRes, serverBridgeRes, ...mdnsResults] = await Promise.all(fastPromises);
+
+    if (helperRes && helperRes.ip) {
+      onLog?.(`[ESP32 Discovery] ✓ Discovered VEGA Programmer at ${helperRes.ip} (Local Helper)`);
       if (typeof window !== 'undefined') {
         try {
-          localStorage.setItem('vega_ide_esp32_ip', validFast.ip);
+          localStorage.setItem('vega_ide_esp32_ip', helperRes.ip);
         } catch {}
       }
-      return validFast;
+      return helperRes;
+    }
+
+    if (serverBridgeRes.subnets) {
+      detectedSubnetPrefixes = serverBridgeRes.subnets.map((s) => s.prefix);
+    }
+    if (serverBridgeRes.arpIps) {
+      detectedArpIps = serverBridgeRes.arpIps;
+    }
+
+    if (serverBridgeRes.result && serverBridgeRes.result.ip) {
+      onLog?.(`[ESP32 Discovery] ✓ Discovered VEGA Programmer at ${serverBridgeRes.result.ip} (${serverBridgeRes.result.source?.toUpperCase()})`);
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('vega_ide_esp32_ip', serverBridgeRes.result.ip);
+        } catch {}
+      }
+      return serverBridgeRes.result;
+    }
+
+    const validMdns = mdnsResults.find((r): r is DiscoveredEsp32 => r !== null && r.discovered);
+    if (validMdns && validMdns.ip) {
+      onLog?.(`[ESP32 Discovery] ✓ Discovered VEGA Programmer at ${validMdns.ip} (mDNS)`);
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('vega_ide_esp32_ip', validMdns.ip);
+        } catch {}
+      }
+      return validMdns;
     }
   } catch {}
 
   // --------------------------------------------------------------------------
-  // STAGE 4: Dynamically Detected Subnet Fast Sweep
+  // STAGE 4: Dynamically Detected Active Subnet Fast Sweep
   // --------------------------------------------------------------------------
-  const subnetResult = await scanSubnetFromBrowser(onLog);
+  const subnetResult = await scanSubnetFromBrowser(detectedSubnetPrefixes, detectedArpIps, onLog);
   if (subnetResult && subnetResult.discovered && subnetResult.ip) {
     if (typeof window !== 'undefined') {
       try {
@@ -358,7 +479,7 @@ export async function discoverEsp32(
     return subnetResult;
   }
 
-  onLog?.('[ESP32 Discovery] No VEGA Programmer found automatically on local network.');
+  onLog?.('[ESP32 Discovery] No VEGA Programmer found on active local network.');
   return {
     discovered: false,
     ip: '',
@@ -371,17 +492,20 @@ export async function discoverEsp32(
  */
 export async function probeEsp32Endpoint(
   baseUrl: string,
-  timeoutMs = 3000
+  timeoutMs = 2000
 ): Promise<DiscoveredEsp32 | null> {
   const direct = await probeEndpoint(baseUrl, timeoutMs);
   if (direct && direct.discovered) return direct;
-  return probeServerDiscovery(baseUrl, timeoutMs);
+  const helper = await probeLocalHelper(baseUrl, timeoutMs);
+  if (helper && helper.discovered) return helper;
+  const bridge = await probeServerDiscovery(baseUrl, timeoutMs);
+  return bridge.result;
 }
 
 /**
  * Check if existing address is alive and healthy
  */
-export async function checkEsp32Health(address: string, timeoutMs = 3000): Promise<boolean> {
+export async function checkEsp32Health(address: string, timeoutMs = 2000): Promise<boolean> {
   if (!address) return false;
   const res = await probeEsp32Endpoint(address, timeoutMs);
   return res !== null && res.discovered;
