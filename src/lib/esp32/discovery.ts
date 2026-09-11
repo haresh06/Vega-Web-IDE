@@ -129,7 +129,7 @@ async function probeEndpoint(
 /**
  * Query the local VEGA Lab helper at http://127.0.0.1:4000/esp32/discover
  */
-async function probeLocalHelper(target?: string, timeoutMs = 2500): Promise<DiscoveredEsp32 | null> {
+async function probeLocalHelper(target?: string, timeoutMs = 5500): Promise<DiscoveredEsp32 | null> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -176,7 +176,7 @@ async function probeLocalHelper(target?: string, timeoutMs = 2500): Promise<Disc
  */
 async function probeServerDiscovery(
   target?: string,
-  timeoutMs = 2500
+  timeoutMs = 5500
 ): Promise<{ result: DiscoveredEsp32 | null; subnets?: ActiveSubnetInfo[]; arpIps?: string[] }> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -290,9 +290,9 @@ async function scanSubnetFromBrowser(
     }
   }
 
-  // Fallback common 2.4GHz hotspot & router subnets only if no active subnets discovered
-  if (prefixes.length === 0) {
-    prefixes.push('192.168.1', '192.168.0', '192.168.43', '10.0.0', '172.20.10');
+  // If no dynamically detected active subnet prefixes or ARP IPs exist, skip browser scan
+  if (prefixes.length === 0 && arpIps.length === 0) {
+    return null;
   }
 
   onLog?.(`[ESP32 Discovery] Probing active local network (${prefixes.slice(0, 3).join(', ')})...`);
@@ -416,8 +416,8 @@ export async function discoverEsp32(
     Promise<{ result: DiscoveredEsp32 | null; subnets?: ActiveSubnetInfo[]; arpIps?: string[] }>,
     ...Promise<DiscoveredEsp32 | null>[]
   ] = [
-    probeLocalHelper(undefined, 2500),
-    probeServerDiscovery(undefined, 2200),
+    probeLocalHelper(undefined, 5500),
+    probeServerDiscovery(undefined, 5500),
     ...MDNS_CANDIDATES.map((candidate) => probeEndpoint(candidate, 1800)),
   ];
 
