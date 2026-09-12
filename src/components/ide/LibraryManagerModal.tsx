@@ -55,6 +55,16 @@ export default function LibraryManagerModal({ isOpen, onClose, helperUrl = 'http
         setHelperConnected(false);
         setLibraries([
           {
+            name: 'PWM',
+            displayName: 'PWM',
+            author: 'C-DAC',
+            version: '1.0.0',
+            description: 'VEGA PWM peripheral library for THEJAS32 / VEGA ARIES v2.',
+            header: 'pwm.h',
+            category: 'Peripheral',
+            installed: false,
+          },
+          {
             name: 'SPI',
             displayName: 'SPI (Hardware SPI Driver)',
             author: 'C-DAC',

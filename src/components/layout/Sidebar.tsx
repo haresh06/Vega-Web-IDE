@@ -244,14 +244,14 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse }: Sideb
             className="sidebar-user-card"
             aria-label="Developer Portal / Sign In"
           >
-            <div className="user-avatar-circle">
+            <div className="user-avatar-box">
               <User size={15} />
             </div>
-            <div className="user-info-col">
+            <div className="user-text-col">
               <span className="user-name">Developer Portal</span>
-              <span className="user-sub">Sign In / Profile</span>
+              <span className="user-status">Sign In / Profile</span>
             </div>
-            <LogIn size={15} className="user-arrow-icon" />
+            <LogIn size={15} className="user-action-icon" />
             <span className="sidebar-collapsed-tooltip" aria-hidden="true">
               Developer Portal
             </span>
