@@ -43,16 +43,20 @@ export default function VegaLabSetupCard({ className = '', compact = false }: Ve
 
       <style jsx>{`
         .vega-setup-card {
-          background: rgba(15, 23, 42, 0.85);
-          border: 1px solid rgba(56, 189, 248, 0.22);
+          background: #0c0c0e;
+          border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 8px;
           padding: 0.85rem;
           margin: 0.75rem 0.5rem;
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-          backdrop-filter: blur(8px);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
           display: flex;
           flex-direction: column;
           gap: 0.55rem;
+          transition: all 0.2s ease;
+        }
+        .vega-setup-card:hover {
+          border-color: rgba(255, 255, 255, 0.16);
+          background: #101014;
         }
         .vega-setup-card.compact {
           padding: 0.65rem;
@@ -71,12 +75,12 @@ export default function VegaLabSetupCard({ className = '', compact = false }: Ve
           gap: 0.4rem;
         }
         :global(.setup-icon) {
-          color: var(--color-accent-cyan, #00f0ff);
+          color: #ffffff;
         }
         .setup-title {
           font-size: 0.82rem;
           font-weight: 700;
-          color: #f1f5f9;
+          color: #ffffff;
           margin: 0;
           letter-spacing: -0.01em;
         }
@@ -84,9 +88,9 @@ export default function VegaLabSetupCard({ className = '', compact = false }: Ve
           font-size: 0.65rem;
           font-weight: 700;
           text-transform: uppercase;
-          background: rgba(56, 189, 248, 0.12);
-          border: 1px solid rgba(56, 189, 248, 0.35);
-          color: #38bdf8;
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          color: #e4e4e7;
           padding: 0.15rem 0.45rem;
           border-radius: 4px;
           letter-spacing: 0.05em;
@@ -94,7 +98,7 @@ export default function VegaLabSetupCard({ className = '', compact = false }: Ve
         .setup-desc {
           font-size: 0.73rem;
           line-height: 1.35;
-          color: #94a3b8;
+          color: #a1a1aa;
           margin: 0;
         }
         .setup-download-btn {
@@ -102,23 +106,23 @@ export default function VegaLabSetupCard({ className = '', compact = false }: Ve
           align-items: center;
           justify-content: center;
           gap: 0.45rem;
-          padding: 0.42rem 0.75rem;
-          background: linear-gradient(135deg, #00f0ff, #0284c7);
-          color: #050d1a;
+          padding: 0.45rem 0.75rem;
+          background: #ffffff;
+          color: #000000;
           font-size: 0.76rem;
           font-weight: 700;
-          border-radius: 5px;
+          border-radius: 6px;
           text-decoration: none;
           transition: all 0.2s ease;
           border: none;
           cursor: pointer;
           margin-top: 0.2rem;
-          box-shadow: 0 2px 8px rgba(0, 240, 255, 0.25);
+          box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
         }
         .setup-download-btn:hover {
           transform: translateY(-1px);
-          box-shadow: 0 4px 14px rgba(0, 240, 255, 0.45);
-          filter: brightness(1.08);
+          background: #e4e4e7;
+          box-shadow: 0 4px 14px rgba(255, 255, 255, 0.2);
           color: #000000;
         }
         :global(.download-icon) {
@@ -129,12 +133,12 @@ export default function VegaLabSetupCard({ className = '', compact = false }: Ve
           align-items: center;
           gap: 0.35rem;
           font-size: 0.67rem;
-          color: #64748b;
+          color: #71717a;
           line-height: 1.25;
           margin-top: 0.1rem;
         }
         :global(.note-icon) {
-          color: #10b981;
+          color: #a1a1aa;
           flex-shrink: 0;
         }
       `}</style>

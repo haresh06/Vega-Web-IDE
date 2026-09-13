@@ -267,7 +267,7 @@ export default function ExamplesPage() {
         <span>
           Showing <span className="examples-count-highlight">{filteredExamples.length}</span> example
           {filteredExamples.length === 1 ? '' : 's'} in{' '}
-          <strong style={{ color: '#cbd5e1' }}>{selectedCategory}</strong>
+          <strong style={{ color: '#ffffff' }}>{selectedCategory}</strong>
         </span>
         {searchQuery && (
           <button
@@ -330,7 +330,7 @@ export default function ExamplesPage() {
                       </span>
                     ))
                   ) : (
-                    <span className="meta-tag" style={{ color: '#64748b' }}>
+                    <span className="meta-tag" style={{ color: '#71717a' }}>
                       None (Built-in)
                     </span>
                   )}
@@ -482,7 +482,7 @@ export default function ExamplesPage() {
                       </span>
                     ))
                   ) : (
-                    <span className="tag-badge" style={{ color: '#64748b' }}>
+                    <span className="tag-badge" style={{ color: '#71717a' }}>
                       No external libraries required (Core Arduino API)
                     </span>
                   )}

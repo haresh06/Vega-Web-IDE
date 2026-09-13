@@ -374,6 +374,7 @@ export default function DocsPage() {
           padding: 2.5rem 1.75rem 6rem 1.75rem;
           font-family: 'General Sans', -apple-system, BlinkMacSystemFont, sans-serif;
           color: #e2e8f0;
+          background: #000000;
         }
 
         /* --------------------------------------------------------
@@ -406,7 +407,7 @@ export default function DocsPage() {
         }
 
         .header-subtitle {
-          color: #94a3b8;
+          color: #a1a1aa;
           font-size: 1.05rem;
           margin: 0;
           font-weight: 400;
@@ -432,7 +433,7 @@ export default function DocsPage() {
 
         .section-icon-gear,
         .section-icon-cross {
-          color: #06d6a0;
+          color: #ffffff;
           font-size: 1.1rem;
           line-height: 1;
         }
@@ -441,13 +442,13 @@ export default function DocsPage() {
           font-family: 'General Sans', sans-serif;
           font-size: 1.15rem;
           font-weight: 800;
-          color: #06d6a0;
+          color: #ffffff;
           letter-spacing: 0.04em;
           margin: 0;
         }
 
         .section-subtext {
-          color: #94a3b8;
+          color: #a1a1aa;
           font-size: 0.92rem;
           margin: 0;
         }
@@ -456,16 +457,17 @@ export default function DocsPage() {
            CARDS COMMON
         -------------------------------------------------------- */
         .doc-card {
-          background: #0d1322;
+          background: #0c0c0e;
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 14px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
           transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .doc-card:hover {
-          border-color: rgba(6, 214, 160, 0.35);
-          box-shadow: 0 8px 28px rgba(6, 214, 160, 0.1);
+          border-color: rgba(255, 255, 255, 0.22);
+          background: #101014;
+          box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6);
         }
 
         /* --------------------------------------------------------
@@ -494,7 +496,7 @@ export default function DocsPage() {
         .pdf-icon-badge {
           width: 38px;
           height: 46px;
-          background: #ef4444;
+          background: #ffffff;
           border-radius: 6px;
           display: flex;
           align-items: flex-end;
@@ -502,7 +504,7 @@ export default function DocsPage() {
           padding-bottom: 4px;
           position: relative;
           flex-shrink: 0;
-          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+          box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
         }
 
         .pdf-icon-badge::before {
@@ -512,7 +514,7 @@ export default function DocsPage() {
           right: 0;
           width: 12px;
           height: 12px;
-          background: #991b1b;
+          background: #d4d4d8;
           border-bottom-left-radius: 4px;
         }
 
@@ -520,7 +522,7 @@ export default function DocsPage() {
           font-family: var(--font-mono, monospace);
           font-size: 0.65rem;
           font-weight: 900;
-          color: #ffffff;
+          color: #000000;
           letter-spacing: 0.06em;
         }
 
@@ -533,7 +535,7 @@ export default function DocsPage() {
         }
 
         .card-desc {
-          color: #94a3b8;
+          color: #a1a1aa;
           font-size: 0.88rem;
           line-height: 1.45;
           margin: 0;
@@ -553,26 +555,26 @@ export default function DocsPage() {
         }
 
         .spec-icon {
-          color: #06d6a0;
+          color: #a1a1aa;
           margin-bottom: 2px;
         }
 
         .spec-label {
           font-size: 0.74rem;
-          color: #64748b;
+          color: #71717a;
           font-weight: 500;
         }
 
         .spec-value {
           font-size: 0.88rem;
-          color: #f1f5f9;
+          color: #ffffff;
           font-weight: 700;
         }
 
         .card-action-row {
           margin-top: auto;
           padding-top: 1.25rem;
-          border-top: 1px solid rgba(255, 255, 255, 0.06);
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .btn-open-doc {
@@ -583,9 +585,9 @@ export default function DocsPage() {
           width: 100%;
           padding: 0.75rem 1.25rem;
           border-radius: 8px;
-          background: rgba(6, 214, 160, 0.06);
-          border: 1px solid rgba(6, 214, 160, 0.35);
-          color: #06d6a0;
+          background: #ffffff;
+          border: none;
+          color: #000000;
           font-family: 'General Sans', sans-serif;
           font-size: 0.88rem;
           font-weight: 700;
@@ -595,30 +597,28 @@ export default function DocsPage() {
         }
 
         .btn-open-doc:hover {
-          background: linear-gradient(135deg, #06d6a0, #0284c7);
-          color: #041210;
-          border-color: transparent;
+          background: #e4e4e7;
           transform: translateY(-2px);
-          box-shadow: 0 4px 16px rgba(6, 214, 160, 0.3);
+          box-shadow: 0 4px 16px rgba(255, 255, 255, 0.18);
         }
 
         /* --------------------------------------------------------
            2. PINOUT SECTION (DARK TECHNICAL PANEL)
         -------------------------------------------------------- */
         .pinout-presentation-card {
-          background: #0d1322;
+          background: #0c0c0e;
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 14px;
           padding: 1.75rem 2rem;
           display: flex;
           flex-direction: column;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
           transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .pinout-presentation-card:hover {
-          border-color: rgba(6, 214, 160, 0.35);
-          box-shadow: 0 8px 28px rgba(6, 214, 160, 0.1);
+          border-color: rgba(255, 255, 255, 0.22);
+          background: #101014;
         }
 
         .pinout-card-header-inner {
@@ -634,7 +634,7 @@ export default function DocsPage() {
         }
 
         .pinout-card-subtitle-inner {
-          color: #94a3b8;
+          color: #a1a1aa;
           font-size: 0.88rem;
           margin: 0;
         }
@@ -647,7 +647,6 @@ export default function DocsPage() {
           overflow-x: auto;
           padding: 0.5rem 0 1.5rem 0;
           scrollbar-width: thin;
-          scrollbar-color: rgba(6, 214, 160, 0.3) rgba(255, 255, 255, 0.05);
         }
 
         .pinout-display-img {
@@ -657,7 +656,7 @@ export default function DocsPage() {
           border-radius: 8px;
           display: block;
           object-fit: contain;
-          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
         }
 
         .pinout-bottom-action {
@@ -665,7 +664,7 @@ export default function DocsPage() {
           justify-content: center;
           width: 100%;
           padding-top: 1.25rem;
-          border-top: 1px solid rgba(255, 255, 255, 0.06);
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
           margin-top: 0.5rem;
         }
 
@@ -676,9 +675,9 @@ export default function DocsPage() {
           gap: 8px;
           padding: 0.7rem 2rem;
           border-radius: 8px;
-          background: rgba(6, 214, 160, 0.06);
-          border: 1px solid rgba(6, 214, 160, 0.35);
-          color: #06d6a0;
+          background: #ffffff;
+          border: none;
+          color: #000000;
           font-family: 'General Sans', sans-serif;
           font-size: 0.88rem;
           font-weight: 700;
@@ -687,11 +686,9 @@ export default function DocsPage() {
         }
 
         .btn-view-fullsize-teal:hover {
-          background: linear-gradient(135deg, rgba(6, 214, 160, 0.2), rgba(56, 189, 248, 0.15));
-          border-color: rgba(6, 214, 160, 0.5);
-          color: #38bdf8;
+          background: #e4e4e7;
           transform: translateY(-2px);
-          box-shadow: 0 4px 16px rgba(6, 214, 160, 0.2);
+          box-shadow: 0 4px 16px rgba(255, 255, 255, 0.18);
         }
 
         /* --------------------------------------------------------
@@ -704,7 +701,7 @@ export default function DocsPage() {
         }
 
         .fw-card {
-          background: #0d1322;
+          background: #0c0c0e;
           border: 1px solid rgba(255, 255, 255, 0.07);
           border-radius: 12px;
           padding: 1.25rem 1rem;
@@ -717,19 +714,19 @@ export default function DocsPage() {
         }
 
         .fw-card:hover {
-          border-color: rgba(6, 214, 160, 0.35);
-          background: rgba(6, 214, 160, 0.04);
+          border-color: rgba(255, 255, 255, 0.25);
+          background: #141418;
           transform: translateY(-3px);
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
         }
 
         .fw-card-highlight {
-          border-color: rgba(6, 214, 160, 0.25);
-          background: linear-gradient(180deg, rgba(6, 214, 160, 0.06) 0%, rgba(13, 19, 34, 1) 100%);
+          border-color: rgba(255, 255, 255, 0.14);
+          background: #101014;
         }
 
         .fw-icon-box {
-          color: #94a3b8;
+          color: #d4d4d8;
           margin-bottom: 0.85rem;
           display: flex;
           align-items: center;
@@ -737,20 +734,20 @@ export default function DocsPage() {
         }
 
         .fw-icon-ota {
-          color: #06d6a0;
+          color: #ffffff;
         }
 
         .fw-card h4 {
           font-family: 'General Sans', sans-serif;
           font-size: 0.88rem;
           font-weight: 700;
-          color: #f1f5f9;
+          color: #ffffff;
           margin: 0 0 0.35rem 0;
           line-height: 1.3;
         }
 
         .fw-card p {
-          color: #64748b;
+          color: #71717a;
           font-size: 0.74rem;
           line-height: 1.4;
           margin: 0;
@@ -771,11 +768,11 @@ export default function DocsPage() {
           justify-content: center;
           gap: 8px;
           padding: 0.85rem 0.5rem;
-          background: #0d1322;
-          border: 1px solid rgba(255, 255, 255, 0.07);
+          background: #060608;
+          border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 10px;
           text-decoration: none;
-          color: #cbd5e1;
+          color: #d4d4d8;
           font-family: 'General Sans', sans-serif;
           font-size: 0.85rem;
           font-weight: 700;
@@ -784,17 +781,11 @@ export default function DocsPage() {
 
         .peri-chip:hover {
           transform: translateY(-2px);
-          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+          background: #141418;
+          border-color: rgba(255, 255, 255, 0.25);
+          color: #ffffff;
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
         }
-
-        .peri-gpio:hover { border-color: #ff9f1c; color: #ff9f1c; background: rgba(255, 159, 28, 0.08); }
-        .peri-uart:hover { border-color: #38bdf8; color: #38bdf8; background: rgba(56, 189, 248, 0.08); }
-        .peri-spi:hover { border-color: #06d6a0; color: #06d6a0; background: rgba(6, 214, 160, 0.08); }
-        .peri-i2c:hover { border-color: #c084fc; color: #c084fc; background: rgba(192, 132, 252, 0.08); }
-        .peri-timers:hover { border-color: #fbbf24; color: #fbbf24; background: rgba(251, 191, 36, 0.08); }
-        .peri-pwm:hover { border-color: #2dd4bf; color: #2dd4bf; background: rgba(45, 212, 191, 0.08); }
-        .peri-adc:hover { border-color: #4ade80; color: #4ade80; background: rgba(74, 222, 128, 0.08); }
-        .peri-interrupts:hover { border-color: #f472b6; color: #f472b6; background: rgba(244, 114, 182, 0.08); }
 
         .peri-icon {
           flex-shrink: 0;

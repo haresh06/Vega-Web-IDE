@@ -2058,22 +2058,22 @@ export default function IDEPage() {
           gap: 0.5rem;
           width: 100%;
           padding: 0.42rem 0.65rem;
-          background: rgba(56, 189, 248, 0.08);
-          border: 1px solid rgba(56, 189, 248, 0.25);
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.12);
           border-radius: 6px;
-          color: var(--color-accent-cyan, #38bdf8);
+          color: #ffffff;
           font-size: 0.76rem;
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s;
         }
         .fe-lib-btn:hover {
-          background: rgba(56, 189, 248, 0.16);
-          border-color: var(--color-accent-cyan, #38bdf8);
-          box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+          background: rgba(255, 255, 255, 0.12);
+          border-color: rgba(255, 255, 255, 0.25);
+          box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
         }
         .fe-lib-icon {
-          color: var(--color-accent-cyan, #38bdf8);
+          color: #ffffff;
         }
       `}</style>
 

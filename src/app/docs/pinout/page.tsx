@@ -103,6 +103,7 @@ export default function PinoutPage() {
           padding: 2.25rem 2rem 5rem 2rem;
           font-family: 'General Sans', -apple-system, BlinkMacSystemFont, sans-serif;
           color: #e2e8f0;
+          background: #000000;
         }
 
         /* --------------------------------------------------------
@@ -121,14 +122,14 @@ export default function PinoutPage() {
           display: inline-flex;
           align-items: center;
           gap: 5px;
-          color: #06d6a0;
+          color: #ffffff;
           font-weight: 600;
           text-decoration: none;
-          transition: color 0.2s ease;
+          transition: opacity 0.2s ease;
         }
 
         .breadcrumb-link:hover {
-          color: #38bdf8;
+          opacity: 0.75;
           text-decoration: underline;
         }
 
@@ -137,11 +138,11 @@ export default function PinoutPage() {
         }
 
         .breadcrumb-sep {
-          color: #475569;
+          color: #52525b;
         }
 
         .breadcrumb-current {
-          color: #94a3b8;
+          color: #a1a1aa;
           font-weight: 500;
         }
 
@@ -185,7 +186,7 @@ export default function PinoutPage() {
         }
 
         .header-subtitle {
-          color: #94a3b8;
+          color: #a1a1aa;
           font-size: 1rem;
           margin: 0;
           line-height: 1.5;
@@ -204,9 +205,9 @@ export default function PinoutPage() {
           gap: 7px;
           padding: 0.65rem 1.15rem;
           border-radius: 8px;
-          background: linear-gradient(135deg, rgba(6, 214, 160, 0.15), rgba(56, 189, 248, 0.12));
-          border: 1px solid rgba(6, 214, 160, 0.35);
-          color: #06d6a0;
+          background: #ffffff;
+          border: none;
+          color: #000000;
           font-family: 'General Sans', sans-serif;
           font-size: 0.85rem;
           font-weight: 700;
@@ -215,20 +216,18 @@ export default function PinoutPage() {
         }
 
         .btn-open-datasheet-header:hover {
-          background: linear-gradient(135deg, #06d6a0, #0284c7);
-          color: #041210;
-          border-color: transparent;
+          background: #e4e4e7;
           transform: translateY(-2px);
-          box-shadow: 0 4px 16px rgba(6, 214, 160, 0.35);
+          box-shadow: 0 4px 16px rgba(255, 255, 255, 0.18);
         }
 
         .pdf-tag {
           font-family: var(--font-mono, monospace);
           font-size: 0.72rem;
           font-weight: 800;
-          color: #ef4444;
-          background: rgba(239, 68, 68, 0.12);
-          border: 1px solid rgba(239, 68, 68, 0.3);
+          color: #ffffff;
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.16);
           padding: 4px 8px;
           border-radius: 6px;
         }
@@ -237,19 +236,19 @@ export default function PinoutPage() {
            MAIN PINOUT PANEL
         -------------------------------------------------------- */
         .pinout-main-card {
-          background: #0d1322;
+          background: #0c0c0e;
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 16px;
           padding: 1.5rem;
           display: flex;
           flex-direction: column;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
           margin-bottom: 2rem;
           transition: border-color 0.2s ease;
         }
 
         .pinout-main-card:hover {
-          border-color: rgba(6, 214, 160, 0.25);
+          border-color: rgba(255, 255, 255, 0.2);
         }
 
         .card-top-bar {
@@ -267,9 +266,9 @@ export default function PinoutPage() {
           font-family: var(--font-mono, monospace);
           font-size: 0.78rem;
           font-weight: 700;
-          color: #06d6a0;
-          background: rgba(6, 214, 160, 0.1);
-          border: 1px solid rgba(6, 214, 160, 0.25);
+          color: #ffffff;
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.16);
           padding: 3px 10px;
           border-radius: 6px;
           letter-spacing: 0.04em;
@@ -279,7 +278,7 @@ export default function PinoutPage() {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          color: #94a3b8;
+          color: #a1a1aa;
           font-size: 0.8rem;
           font-weight: 600;
           text-decoration: none;
@@ -287,7 +286,7 @@ export default function PinoutPage() {
         }
 
         .btn-quick-zoom:hover {
-          color: #06d6a0;
+          color: #ffffff;
         }
 
         .diagram-scroll-viewport {
@@ -298,7 +297,6 @@ export default function PinoutPage() {
           overflow-x: auto;
           padding: 0.5rem 0 1.5rem 0;
           scrollbar-width: thin;
-          scrollbar-color: rgba(6, 214, 160, 0.3) rgba(255, 255, 255, 0.05);
         }
 
         .pinout-full-diagram {
@@ -306,7 +304,7 @@ export default function PinoutPage() {
           max-width: 1060px;
           height: auto;
           border-radius: 10px;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
           object-fit: contain;
           display: block;
         }
@@ -325,9 +323,9 @@ export default function PinoutPage() {
           gap: 8px;
           padding: 0.75rem 1.75rem;
           border-radius: 8px;
-          background: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          color: #f1f5f9;
+          background: #ffffff;
+          border: none;
+          color: #000000;
           font-family: 'General Sans', sans-serif;
           font-size: 0.9rem;
           font-weight: 700;
@@ -336,11 +334,9 @@ export default function PinoutPage() {
         }
 
         .btn-view-fullsize-large:hover {
-          background: linear-gradient(135deg, rgba(6, 214, 160, 0.2), rgba(56, 189, 248, 0.15));
-          border-color: rgba(6, 214, 160, 0.4);
-          color: #06d6a0;
+          background: #e4e4e7;
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(6, 214, 160, 0.25);
+          box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
         }
 
         /* --------------------------------------------------------
@@ -351,16 +347,16 @@ export default function PinoutPage() {
           align-items: flex-start;
           gap: 12px;
           padding: 1.15rem 1.4rem;
-          background: rgba(6, 214, 160, 0.05);
-          border: 1px solid rgba(6, 214, 160, 0.2);
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 10px;
-          color: #94a3b8;
+          color: #a1a1aa;
           font-size: 0.88rem;
           line-height: 1.6;
         }
 
         .note-icon {
-          color: #06d6a0;
+          color: #ffffff;
           flex-shrink: 0;
           margin-top: 2px;
         }

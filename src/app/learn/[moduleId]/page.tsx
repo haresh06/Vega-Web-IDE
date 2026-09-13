@@ -399,17 +399,17 @@ function ModulePageContent({ moduleId }: { moduleId: string }) {
         }
 
         .lesson-nav-item:hover {
-          background: rgba(6, 214, 160, 0.06);
-          border-color: rgba(6, 214, 160, 0.2);
+          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(255, 255, 255, 0.2);
           color: #ffffff;
           transform: translateX(2px);
         }
 
         .lesson-nav-item.active {
-          background: linear-gradient(135deg, rgba(6, 214, 160, 0.16) 0%, rgba(56, 189, 248, 0.1) 100%);
-          border-color: rgba(6, 214, 160, 0.45);
-          color: #06d6a0;
-          box-shadow: 0 4px 14px rgba(6, 214, 160, 0.12);
+          background: #ffffff;
+          border-color: #ffffff;
+          color: #000000;
+          box-shadow: 0 4px 14px rgba(255, 255, 255, 0.15);
         }
 
         .nav-item-icon-box {
@@ -421,29 +421,29 @@ function ModulePageContent({ moduleId }: { moduleId: string }) {
         }
 
         .status-icon-check {
-          color: #22c55e;
+          color: #ffffff;
         }
 
         .status-icon-active {
-          color: #06d6a0;
+          color: #000000;
         }
 
         .status-dot-inactive {
           width: 6px;
           height: 6px;
           border-radius: 50%;
-          background: #475569;
+          background: #52525b;
         }
 
         .nav-item-index {
           font-family: var(--font-mono, monospace);
           font-size: 0.75rem;
           font-weight: 700;
-          color: #64748b;
+          color: #71717a;
         }
 
         .lesson-nav-item.active .nav-item-index {
-          color: #06d6a0;
+          color: #000000;
         }
 
         .nav-item-title {
@@ -479,14 +479,16 @@ function ModulePageContent({ moduleId }: { moduleId: string }) {
         }
 
         .btn-action-ide {
-          background: linear-gradient(135deg, #06d6a0, #0284c7);
-          color: #041210;
-          box-shadow: 0 4px 14px rgba(6, 214, 160, 0.25);
+          background: #ffffff;
+          color: #000000;
+          border: none;
+          box-shadow: 0 4px 14px rgba(255, 255, 255, 0.15);
         }
 
         .btn-action-ide:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(6, 214, 160, 0.4);
+          background: #e4e4e7;
+          box-shadow: 0 6px 20px rgba(255, 255, 255, 0.25);
         }
 
         .btn-action-quiz {
@@ -541,9 +543,9 @@ function ModulePageContent({ moduleId }: { moduleId: string }) {
           font-family: 'General Sans', sans-serif;
           font-size: 0.74rem;
           font-weight: 800;
-          color: #06d6a0;
-          background: rgba(6, 214, 160, 0.12);
-          border: 1px solid rgba(6, 214, 160, 0.3);
+          color: #ffffff;
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.16);
           padding: 4px 10px;
           border-radius: 6px;
           letter-spacing: 0.06em;
@@ -552,7 +554,7 @@ function ModulePageContent({ moduleId }: { moduleId: string }) {
         .lesson-category-tag {
           font-size: 0.74rem;
           font-weight: 700;
-          color: #64748b;
+          color: #71717a;
           letter-spacing: 0.08em;
         }
 
@@ -572,9 +574,9 @@ function ModulePageContent({ moduleId }: { moduleId: string }) {
           margin-bottom: 2.5rem;
           border-radius: 14px;
           overflow: hidden;
-          background: #020611;
+          background: #000000;
           border: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
         }
 
         .video-aspect-ratio-box {
@@ -597,16 +599,16 @@ function ModulePageContent({ moduleId }: { moduleId: string }) {
           align-items: center;
           gap: 10px;
           padding: 0.9rem 1.25rem;
-          background: #0a0f1d;
-          border-top: 1px solid rgba(255, 255, 255, 0.06);
+          background: #0c0c0e;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .video-player-badge {
           font-size: 0.7rem;
           font-weight: 800;
-          color: #38bdf8;
-          background: rgba(56, 189, 248, 0.12);
-          border: 1px solid rgba(56, 189, 248, 0.3);
+          color: #ffffff;
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.16);
           padding: 2px 8px;
           border-radius: 4px;
           letter-spacing: 0.04em;
@@ -668,15 +670,16 @@ function ModulePageContent({ moduleId }: { moduleId: string }) {
         }
 
         .btn-next, .btn-finish {
-          background: linear-gradient(135deg, #06d6a0, #0284c7);
-          color: #041210;
+          background: #ffffff;
+          color: #000000;
           border: none;
-          box-shadow: 0 4px 18px rgba(6, 214, 160, 0.3);
+          box-shadow: 0 4px 18px rgba(255, 255, 255, 0.15);
         }
 
         .btn-next:hover, .btn-finish:hover {
           transform: translateX(2px);
-          box-shadow: 0 6px 24px rgba(6, 214, 160, 0.45);
+          background: #e4e4e7;
+          box-shadow: 0 6px 24px rgba(255, 255, 255, 0.25);
         }
 
         .lesson-progress-indicator {

@@ -42,7 +42,7 @@ const navGroups: NavGroup[] = [
   {
     title: 'CORE PLATFORM',
     items: [
-      { href: '/', label: 'Overview', icon: Home },
+      { href: '/', label: 'Home', icon: Home },
       { href: '/learn', label: 'Learn Center', icon: BookOpen, badge: '12 Paths' },
       { href: '/examples', label: 'Examples', icon: Sparkles },
       { href: '/experiment', label: 'Protocol Lab', icon: FlaskConical, badge: 'Interactive' },
