@@ -141,6 +141,46 @@ export default function VegaLabSetupCard({ className = '', compact = false }: Ve
           color: #a1a1aa;
           flex-shrink: 0;
         }
+
+        /* Light Theme Overrides */
+        :global([data-theme="light"]) .vega-setup-card {
+          background: #ffffff;
+          border-color: #dcdcdc;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        :global([data-theme="light"]) .vega-setup-card:hover {
+          border-color: #c0c0c0;
+          background: #fcfcfc;
+        }
+        :global([data-theme="light"]) .setup-title {
+          color: #111111;
+        }
+        :global([data-theme="light"]) :global(.setup-icon) {
+          color: #111111;
+        }
+        :global([data-theme="light"]) .platform-tag {
+          background: #f5f5f5;
+          border-color: #e0e0e0;
+          color: #111111;
+        }
+        :global([data-theme="light"]) .setup-desc {
+          color: #666666;
+        }
+        :global([data-theme="light"]) .setup-download-btn {
+          background: #111111;
+          color: #ffffff;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        :global([data-theme="light"]) .setup-download-btn:hover {
+          background: #27272a;
+          color: #ffffff;
+        }
+        :global([data-theme="light"]) .setup-note {
+          color: #777777;
+        }
+        :global([data-theme="light"]) :global(.note-icon) {
+          color: #555555;
+        }
       `}</style>
     </div>
   );

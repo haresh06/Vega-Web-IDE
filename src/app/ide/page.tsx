@@ -9,6 +9,7 @@ import VegaLabSetupCard from '@/components/ide/VegaLabSetupCard';
 import LibraryManagerModal from '@/components/ide/LibraryManagerModal';
 import { WebSerialConnection, isWebSerialSupported } from '@/lib/serial/web-serial';
 import { VegaUsbFlasher } from '@/lib/serial/vega-usb-flasher';
+import { useTheme } from '@/components/providers/ThemeProvider';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
@@ -163,6 +164,7 @@ function getStarterTemplate(filename: string): string {
 }
 
 export default function IDEPage() {
+  const { theme } = useTheme();
   const [activeFile, setActiveFile] = useState('main.cpp');
   const [files, setFiles] = useState<Record<string, { content: string; language: string }>>(defaultFiles);
   const [projectName, setProjectName] = useState('LED_Blink');
@@ -221,7 +223,7 @@ export default function IDEPage() {
       if (!candidateIp && typeof window !== 'undefined') {
         try {
           candidateIp = localStorage.getItem('vega_ide_esp32_ip') || '';
-        } catch {}
+        } catch { }
       }
 
       const result = await discoverEsp32(candidateIp, (logMsg) => {
@@ -236,7 +238,7 @@ export default function IDEPage() {
         setManualEsp32Ip(result.ip);
         try {
           localStorage.setItem('vega_ide_esp32_ip', result.ip);
-        } catch {}
+        } catch { }
         healthFailCountRef.current = 0;
         addFlashLog(`✓ ESP32 Programmer discovered at ${result.ip} (${result.source?.toUpperCase() || 'AUTO'})`);
       } else {
@@ -264,7 +266,7 @@ export default function IDEPage() {
     setDiscoveryStatus('searching');
     try {
       localStorage.setItem('vega_ide_esp32_ip', target);
-    } catch {}
+    } catch { }
 
     try {
       const directResult = await probeEsp32Endpoint(target, 2500);
@@ -274,7 +276,7 @@ export default function IDEPage() {
         setManualEsp32Ip(directResult.ip);
         try {
           localStorage.setItem('vega_ide_esp32_ip', directResult.ip);
-        } catch {}
+        } catch { }
         healthFailCountRef.current = 0;
         addFlashLog(`✓ ESP32-S3 Gateway connected at ${directResult.ip}`);
       } else {
@@ -286,7 +288,7 @@ export default function IDEPage() {
           setManualEsp32Ip(discResult.ip);
           try {
             localStorage.setItem('vega_ide_esp32_ip', discResult.ip);
-          } catch {}
+          } catch { }
           healthFailCountRef.current = 0;
           addFlashLog(`✓ ESP32-S3 Gateway connected at ${discResult.ip}`);
         } else {
@@ -774,7 +776,7 @@ export default function IDEPage() {
         setManualEsp32Ip(quickDisc.ip);
         try {
           localStorage.setItem('vega_ide_esp32_ip', quickDisc.ip);
-        } catch {}
+        } catch { }
         targetAddress = quickDisc.address || `http://${quickDisc.ip}`;
       } else {
         setActivePanel('flash');
@@ -1079,8 +1081,8 @@ export default function IDEPage() {
                 discoveryStatus === 'connected'
                   ? `ESP32-S3 Online (${discoveredDevice?.ip || manualEsp32Ip}) • Mode: ${discoveredDevice?.source?.toUpperCase() || 'AUTO'}`
                   : discoveryStatus === 'searching'
-                  ? 'Searching for ESP32 on network via mDNS and local gateway...'
-                  : 'ESP32 not found. Click 🔄 to retry auto-discovery or ⚙️ for manual IP override.'
+                    ? 'Searching for ESP32 on network via mDNS and local gateway...'
+                    : 'ESP32 not found. Click 🔄 to retry auto-discovery or ⚙️ for manual IP override.'
               }
             >
               <span className="ip-label">📡 ESP32:</span>
@@ -1375,7 +1377,7 @@ export default function IDEPage() {
               language={files[activeFile]?.language || detectLanguage(activeFile)}
               value={files[activeFile]?.content || ''}
               onChange={handleFileChange}
-              theme="vs-dark"
+              theme={theme === 'dark' ? 'vs-dark' : 'light'}
               options={{
                 fontSize: 14,
                 fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
@@ -1429,9 +1431,9 @@ export default function IDEPage() {
             <div key={i} className="terminal-line">
               <span className={
                 line.includes('✅') || line.includes('✓') ? 'success' :
-                line.includes('❌') || line.includes('ERROR') ? 'error' :
-                line.includes('Troubleshooting') || line.includes('────') ? 'warning' :
-                line.includes('⚙') || line.includes('──') ? 'info' : ''
+                  line.includes('❌') || line.includes('ERROR') ? 'error' :
+                    line.includes('Troubleshooting') || line.includes('────') ? 'warning' :
+                      line.includes('⚙') || line.includes('──') ? 'info' : ''
               }>
                 {line}
               </span>
@@ -1452,9 +1454,9 @@ export default function IDEPage() {
                 <div key={i} className="terminal-line">
                   <span className={
                     line.includes('✅') || line.includes('✓') ? 'success' :
-                    line.includes('❌') || line.includes('ERROR') ? 'error' :
-                    line.includes('Troubleshooting') || line.includes('────') ? 'warning' :
-                    line.includes('⚙') || line.includes('──') ? 'info' : ''
+                      line.includes('❌') || line.includes('ERROR') ? 'error' :
+                        line.includes('Troubleshooting') || line.includes('────') ? 'warning' :
+                          line.includes('⚙') || line.includes('──') ? 'info' : ''
                   }>
                     {line}
                   </span>
@@ -2074,6 +2076,208 @@ export default function IDEPage() {
         }
         .fe-lib-icon {
           color: #ffffff;
+        }
+
+        /* ========================================================
+           LIGHT THEME OVERRIDES FOR IDE
+           ======================================================== */
+        :global([data-theme="light"]) .ide-page {
+          background: #ffffff;
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .ide-toolbar {
+          background: #ffffff;
+          border-bottom: 1px solid #e0e0e0;
+        }
+
+        :global([data-theme="light"]) .toolbar-title {
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .toolbar-project {
+          background: #f5f5f5;
+          color: #555555;
+          border: 1px solid #e0e0e0;
+        }
+
+        :global([data-theme="light"]) .flash-target-toggle {
+          background: #f5f5f5;
+          border: 1px solid #e0e0e0;
+        }
+
+        :global([data-theme="light"]) .target-btn {
+          color: #555555;
+        }
+
+        :global([data-theme="light"]) .target-btn:hover {
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .target-btn.active {
+          background: #111111;
+          color: #ffffff;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        }
+
+        :global([data-theme="light"]) .toolbar-btn {
+          background: #ffffff;
+          border-color: #e0e0e0;
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .toolbar-btn:hover {
+          background: #f5f5f5;
+          border-color: #d0d0d0;
+          color: #000000;
+        }
+
+        :global([data-theme="light"]) .file-explorer {
+          background: #ffffff;
+          border-right: 1px solid #e0e0e0;
+        }
+
+        :global([data-theme="light"]) .fe-header-title {
+          color: #777777;
+        }
+
+        :global([data-theme="light"]) .fe-plus-btn {
+          background: #f5f5f5;
+          border-color: #e0e0e0;
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .fe-plus-btn:hover {
+          background: #ebebeb;
+          border-color: #d0d0d0;
+          color: #000000;
+        }
+
+        :global([data-theme="light"]) .fe-folder {
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .fe-file-button {
+          color: #333333;
+        }
+
+        :global([data-theme="light"]) .fe-file-button:hover {
+          background: #f5f5f5;
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .fe-file-item-wrap.active .fe-file-button {
+          background: #ebebeb;
+          color: #111111;
+          font-weight: 600;
+        }
+
+        :global([data-theme="light"]) .fe-action-icon {
+          color: #777777;
+        }
+
+        :global([data-theme="light"]) .fe-action-icon:hover {
+          color: #111111;
+          background: #e0e0e0;
+        }
+
+        :global([data-theme="light"]) .fe-board-info {
+          color: #555555;
+        }
+
+        :global([data-theme="light"]) .fe-lib-btn {
+          background: #f5f5f5;
+          border: 1px solid #e0e0e0;
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .fe-lib-btn:hover {
+          background: #ebebeb;
+          border-color: #d0d0d0;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        :global([data-theme="light"]) .fe-lib-icon {
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .editor-tabs {
+          background: #f8f8f8;
+          border-bottom: 1px solid #e0e0e0;
+        }
+
+        :global([data-theme="light"]) .editor-tab {
+          color: #555555;
+          border-right: 1px solid #e0e0e0;
+        }
+
+        :global([data-theme="light"]) .editor-tab:hover {
+          color: #111111;
+          background: #f0f0f0;
+        }
+
+        :global([data-theme="light"]) .editor-tab.active {
+          color: #111111;
+          border-bottom-color: #111111;
+          background: #ffffff;
+          font-weight: 600;
+        }
+
+        :global([data-theme="light"]) .editor-tab-add-btn {
+          color: #555555;
+        }
+
+        :global([data-theme="light"]) .editor-tab-add-btn:hover {
+          color: #111111;
+          background: #f0f0f0;
+        }
+
+        :global([data-theme="light"]) .bottom-panel {
+          border-top: 1px solid #e0e0e0;
+          background: #ffffff;
+        }
+
+        :global([data-theme="light"]) .panel-tabs {
+          background: #f8f8f8;
+          border-bottom: 1px solid #e0e0e0;
+        }
+
+        :global([data-theme="light"]) .panel-tab {
+          color: #555555;
+        }
+
+        :global([data-theme="light"]) .panel-tab:hover {
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .panel-tab.active {
+          color: #111111;
+          border-bottom-color: #111111;
+          font-weight: 600;
+        }
+
+        :global([data-theme="light"]) .panel-content.terminal {
+          background: #ffffff;
+          color: #333333;
+        }
+
+        :global([data-theme="light"]) .terminal-line .info {
+          color: #555555;
+        }
+
+        :global([data-theme="light"]) .terminal-line .timestamp {
+          color: #888888;
+        }
+
+        :global([data-theme="light"]) .esp32-status-pill,
+        :global([data-theme="light"]) .usb-status-pill {
+          background: #f5f5f5;
+          border-color: #e0e0e0;
+        }
+
+        :global([data-theme="light"]) .ip-label,
+        :global([data-theme="light"]) .usb-label {
+          color: #111111;
         }
       `}</style>
 

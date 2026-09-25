@@ -858,6 +858,230 @@ export default function ExperimentPage() {
             grid-template-columns: 1fr;
           }
         }
+
+        /* ========================================================
+           LIGHT THEME OVERRIDES FOR EXPERIMENT / PROTOCOL LAB
+           ======================================================== */
+        :global([data-theme="light"]) .experiment-page-wrapper {
+          background-color: #ffffff;
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .header-badge-pill {
+          background: #f5f5f5;
+          border-color: #e0e0e0;
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .page-main-title {
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .page-sub-description {
+          color: #555555;
+        }
+
+        :global([data-theme="light"]) .toggle-tab-btn {
+          background: #ffffff;
+          border-color: #e0e0e0;
+          color: #555555;
+        }
+
+        :global([data-theme="light"]) .toggle-tab-btn:hover {
+          background: #f5f5f5;
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .toggle-tab-btn.active {
+          background: #111111;
+          border-color: #111111;
+          color: #ffffff;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        :global([data-theme="light"]) .proto-summary-card {
+          background: #ffffff;
+          border: 1px solid #e0e0e0;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        :global([data-theme="light"]) .card-ambient-edge {
+          background: none;
+        }
+
+        :global([data-theme="light"]) .proto-summary-card:hover {
+          background: #ffffff;
+          border-color: #d0d0d0;
+          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+        }
+
+        :global([data-theme="light"]) .proto-summary-card.active-selected {
+          background: #fcfcfc;
+          border-color: #111111;
+          box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+        }
+
+        :global([data-theme="light"]) .proto-code-badge {
+          background: #f5f5f5;
+          border-color: #e0e0e0;
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .step-counter-tag {
+          color: #777777;
+        }
+
+        :global([data-theme="light"]) .proto-card-title {
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .proto-card-desc {
+          color: #555555;
+        }
+
+        :global([data-theme="light"]) .card-bottom-action {
+          border-top-color: #e0e0e0;
+          color: #666666;
+        }
+
+        :global([data-theme="light"]) .action-arrow {
+          color: #777777;
+        }
+
+        :global([data-theme="light"]) .selected-indicator {
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .selected-dot {
+          background: #111111;
+          box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
+        }
+
+        :global([data-theme="light"]) .active-proto-steps-panel {
+          background: #ffffff;
+          border-color: #e0e0e0;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        :global([data-theme="light"]) .active-proto-header {
+          border-bottom-color: #e0e0e0;
+        }
+
+        :global([data-theme="light"]) .proto-active-pill {
+          background: #f5f5f5;
+          border-color: #e0e0e0;
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .proto-active-pill .live-dot {
+          background: #111111;
+        }
+
+        :global([data-theme="light"]) .active-proto-header h2 {
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .active-proto-header p {
+          color: #555555;
+        }
+
+        :global([data-theme="light"]) .btn-learn-center {
+          background: #f5f5f5;
+          border-color: #d0d0d0;
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .btn-learn-center:hover {
+          background: #ebebeb;
+          border-color: #b0b0b0;
+        }
+
+        :global([data-theme="light"]) .step-card-item {
+          background: #f8f8f8;
+          border-color: #e0e0e0;
+        }
+
+        :global([data-theme="light"]) .step-card-item:hover {
+          background: #ffffff;
+          border-color: #d0d0d0;
+          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+        }
+
+        :global([data-theme="light"]) .step-num-pill {
+          background: #ffffff;
+          border-color: #e0e0e0;
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .step-content h3 {
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .step-content p {
+          color: #666666;
+        }
+
+        :global([data-theme="light"]) .step-arrow {
+          color: #777777;
+        }
+
+        :global([data-theme="light"]) .experiment-card {
+          background: #ffffff;
+          border-color: #e0e0e0;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        }
+
+        :global([data-theme="light"]) .experiment-card:hover {
+          border-color: #d0d0d0;
+          background: #fcfcfc;
+          box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.08);
+        }
+
+        :global([data-theme="light"]) .exp-header h3 {
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .exp-header p {
+          color: #555555;
+        }
+
+        :global([data-theme="light"]) .exp-time-badge {
+          background: #f5f5f5;
+          border-color: #e0e0e0;
+          color: #555555;
+        }
+
+        :global([data-theme="light"]) .exp-preview-steps h4 {
+          color: #777777;
+        }
+
+        :global([data-theme="light"]) .exp-step-bullet {
+          color: #333333;
+        }
+
+        :global([data-theme="light"]) .step-bullet-num {
+          background: #f5f5f5;
+          border-color: #e0e0e0;
+          color: #111111;
+        }
+
+        :global([data-theme="light"]) .more-steps-tag {
+          color: #777777;
+        }
+
+        :global([data-theme="light"]) .exp-card-footer {
+          border-top-color: #e0e0e0;
+        }
+
+        :global([data-theme="light"]) .btn-start-exp {
+          background: #111111;
+          color: #ffffff;
+        }
+
+        :global([data-theme="light"]) .btn-start-exp:hover {
+          background: #27272a;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
       `}</style>
     </div>
   );

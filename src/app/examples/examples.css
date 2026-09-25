@@ -878,3 +878,415 @@
   background: #e4e4e7;
   box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
 }
+
+/* ========================================================
+   LIGHT THEME OVERRIDES FOR EXAMPLES PAGE
+   ======================================================== */
+[data-theme="light"] .examples-page {
+  background: #ffffff;
+  color: #111111;
+}
+
+[data-theme="light"] .examples-header-badge {
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  color: #111111;
+}
+
+[data-theme="light"] .examples-title {
+  color: #111111;
+}
+
+[data-theme="light"] .examples-subtitle {
+  color: #555555;
+}
+
+/* Stats Row */
+[data-theme="light"] .stat-chip {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .stat-chip:hover {
+  border-color: #d0d0d0;
+  background: #f7f7f7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .stat-chip-icon {
+  background: #f5f5f5;
+  color: #333333;
+  border: 1px solid #e0e0e0;
+}
+
+[data-theme="light"] .stat-chip-value {
+  color: #111111;
+}
+
+[data-theme="light"] .stat-chip-label {
+  color: #777777;
+}
+
+/* Controls */
+[data-theme="light"] .examples-controls {
+  background: #f7f7f7;
+  border: 1px solid #e0e0e0;
+}
+
+[data-theme="light"] .search-icon-box {
+  color: #777777;
+}
+
+[data-theme="light"] .examples-search-input {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  color: #111111;
+}
+
+[data-theme="light"] .examples-search-input:focus {
+  border-color: #111111;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06);
+  background: #ffffff;
+}
+
+[data-theme="light"] .examples-search-input::placeholder {
+  color: #777777;
+}
+
+/* Category Pills */
+[data-theme="light"] .category-pill {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  color: #555555;
+}
+
+[data-theme="light"] .category-pill:hover {
+  color: #111111;
+  border-color: #d0d0d0;
+  background: #ebebeb;
+}
+
+[data-theme="light"] .category-pill.active {
+  background: #111111;
+  border-color: #111111;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Count Bar */
+[data-theme="light"] .examples-count-bar {
+  color: #777777;
+}
+
+[data-theme="light"] .examples-count-highlight {
+  color: #111111;
+}
+
+/* Cards Grid */
+[data-theme="light"] .example-card {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .example-card::before {
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.15), transparent);
+}
+
+[data-theme="light"] .example-card:hover {
+  border-color: #d0d0d0;
+  background: #ffffff;
+  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .example-icon-box {
+  background: #f5f5f5;
+  color: #333333;
+  border: 1px solid #e0e0e0;
+}
+
+[data-theme="light"] .example-category-badge {
+  background: #f0f0f0;
+  border: 1px solid #e0e0e0;
+  color: #333333;
+}
+
+[data-theme="light"] .example-difficulty-badge.beginner {
+  background: #f0f0f0;
+  border: 1px solid #e0e0e0;
+  color: #555555;
+}
+
+[data-theme="light"] .example-difficulty-badge.intermediate {
+  background: #e5e5e5;
+  border: 1px solid #d0d0d0;
+  color: #333333;
+}
+
+[data-theme="light"] .example-difficulty-badge.advanced {
+  background: #111111;
+  border: 1px solid #111111;
+  color: #ffffff;
+}
+
+[data-theme="light"] .example-card-title {
+  color: #111111;
+}
+
+[data-theme="light"] .example-card-desc {
+  color: #555555;
+}
+
+/* Metadata */
+[data-theme="light"] .example-meta-section {
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+}
+
+[data-theme="light"] .example-meta-row {
+  color: #666666;
+}
+
+[data-theme="light"] .meta-label {
+  color: #333333;
+}
+
+[data-theme="light"] .meta-tag {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  color: #333333;
+}
+
+[data-theme="light"] .meta-tag.lib-tag {
+  background: #ebebeb;
+  border-color: #d0d0d0;
+  color: #111111;
+}
+
+/* Card Buttons */
+[data-theme="light"] .btn-example-details {
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  color: #111111;
+}
+
+[data-theme="light"] .btn-example-details:hover {
+  background: #eaeaea;
+  border-color: #d0d0d0;
+  color: #000000;
+}
+
+[data-theme="light"] .btn-example-open {
+  background: #111111;
+  color: #ffffff;
+}
+
+[data-theme="light"] .btn-example-open:hover {
+  background: #27272a;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Empty State */
+[data-theme="light"] .examples-empty {
+  background: #f7f7f7;
+  border: 1px dashed #d0d0d0;
+}
+
+[data-theme="light"] .empty-icon {
+  color: #777777;
+}
+
+[data-theme="light"] .empty-title {
+  color: #111111;
+}
+
+[data-theme="light"] .empty-desc {
+  color: #555555;
+}
+
+[data-theme="light"] .btn-reset-filter {
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  color: #111111;
+}
+
+[data-theme="light"] .btn-reset-filter:hover {
+  background: #f0f0f0;
+}
+
+/* Modals */
+[data-theme="light"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .example-modal-card {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .modal-header {
+  background: #f7f7f7;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+[data-theme="light"] .modal-breadcrumb {
+  color: #777777;
+}
+
+[data-theme="light"] .breadcrumb-root {
+  color: #555555;
+}
+
+[data-theme="light"] .breadcrumb-active {
+  color: #111111;
+}
+
+[data-theme="light"] .modal-close-btn {
+  color: #777777;
+}
+
+[data-theme="light"] .modal-close-btn:hover {
+  background: #e0e0e0;
+  color: #111111;
+}
+
+[data-theme="light"] .modal-title {
+  color: #111111;
+}
+
+[data-theme="light"] .modal-desc {
+  color: #555555;
+}
+
+[data-theme="light"] .modal-section-title {
+  color: #111111;
+}
+
+[data-theme="light"] .learn-item {
+  color: #333333;
+}
+
+[data-theme="light"] .learn-check {
+  color: #111111;
+}
+
+[data-theme="light"] .tag-badge {
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  color: #333333;
+}
+
+[data-theme="light"] .tag-badge.lib {
+  background: #ebebeb;
+  border-color: #d0d0d0;
+  color: #111111;
+}
+
+[data-theme="light"] .code-preview-wrap {
+  background: #f7f7f7;
+  border: 1px solid #e0e0e0;
+}
+
+[data-theme="light"] .code-preview-header {
+  background: #ebebeb;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+[data-theme="light"] .code-tab {
+  color: #777777;
+}
+
+[data-theme="light"] .code-tab:hover {
+  color: #111111;
+}
+
+[data-theme="light"] .code-tab.active {
+  background: #ffffff;
+  border-color: #d0d0d0;
+  color: #111111;
+}
+
+[data-theme="light"] .btn-copy-code {
+  border: 1px solid #d0d0d0;
+  color: #555555;
+}
+
+[data-theme="light"] .btn-copy-code:hover {
+  color: #111111;
+  border-color: #111111;
+  background: #ffffff;
+}
+
+[data-theme="light"] .code-content-box {
+  color: #111111;
+  background: #f7f7f7;
+}
+
+[data-theme="light"] .modal-footer {
+  background: #f7f7f7;
+  border-top: 1px solid #e0e0e0;
+}
+
+[data-theme="light"] .btn-modal-cancel {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  color: #333333;
+}
+
+[data-theme="light"] .btn-modal-cancel:hover {
+  background: #ebebeb;
+  color: #111111;
+}
+
+[data-theme="light"] .btn-modal-primary {
+  background: #111111;
+  color: #ffffff;
+}
+
+[data-theme="light"] .btn-modal-primary:hover {
+  background: #27272a;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .unsaved-modal-card {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .unsaved-icon-wrap {
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  color: #111111;
+}
+
+[data-theme="light"] .unsaved-title {
+  color: #111111;
+}
+
+[data-theme="light"] .unsaved-desc {
+  color: #555555;
+}
+
+[data-theme="light"] .btn-unsaved-cancel {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  color: #333333;
+}
+
+[data-theme="light"] .btn-unsaved-cancel:hover {
+  background: #ebebeb;
+  color: #111111;
+}
+
+[data-theme="light"] .btn-unsaved-confirm {
+  background: #111111;
+  color: #ffffff;
+}
+
+[data-theme="light"] .btn-unsaved-confirm:hover {
+  background: #27272a;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}

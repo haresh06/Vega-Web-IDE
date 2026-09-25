@@ -32,13 +32,13 @@ export default function PinoutPage() {
 
         <div className="header-actions">
           <a
-            href="/docs/ARIESv2_0_Datasheet.pdf"
+            href="/docs/PINOUT_ARIES_V2.0.pdf"
             target="_blank"
             rel="noopener noreferrer"
             className="btn-open-datasheet-header"
           >
             <FileText size={15} />
-            <span>Open Datasheet</span>
+            <span>Open PDF</span>
             <ExternalLink size={14} />
           </a>
           <span className="pdf-tag">PDF</span>
@@ -50,17 +50,30 @@ export default function PinoutPage() {
         {/* Top bar with quick indicator */}
         <div className="card-top-bar">
           <span className="board-badge">VEGA ARIES v2.0 • THEJAS32 RISC-V</span>
-          <a
-            href="/images/aries-v2-pinout.png"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-quick-zoom"
-            title="Open full-resolution image in new tab"
-          >
-            <ZoomIn size={14} />
-            <span>View Full Size</span>
-            <ExternalLink size={12} />
-          </a>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <a
+              href="/docs/PINOUT_ARIES_V2.0.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-quick-zoom"
+              title="Open official PDF in new tab"
+            >
+              <FileText size={14} />
+              <span>View PDF</span>
+              <ExternalLink size={12} />
+            </a>
+            <a
+              href="/images/aries-v2-pinout.png"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-quick-zoom"
+              title="Open full-resolution image in new tab"
+            >
+              <ZoomIn size={14} />
+              <span>View Full Size</span>
+              <ExternalLink size={12} />
+            </a>
+          </div>
         </div>
 
         {/* High-Resolution Diagram Container */}
@@ -73,7 +86,7 @@ export default function PinoutPage() {
         </div>
 
         {/* Card Footer Actions */}
-        <div className="card-bottom-bar">
+        <div className="card-bottom-bar" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
           <a
             href="/images/aries-v2-pinout.png"
             target="_blank"
@@ -82,6 +95,16 @@ export default function PinoutPage() {
           >
             <ZoomIn size={16} />
             <span>View Full Size (Original Resolution)</span>
+            <ExternalLink size={14} />
+          </a>
+          <a
+            href="/docs/PINOUT_ARIES_V2.0.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-view-fullsize-large"
+          >
+            <FileText size={16} />
+            <span>View PDF (Official Reference)</span>
             <ExternalLink size={14} />
           </a>
         </div>

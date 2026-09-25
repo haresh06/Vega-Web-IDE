@@ -484,3 +484,99 @@
 .step-nav-btn:hover .step-arrow-mark {
   transform: translateX(3px) !important;
 }
+
+/* ========================================================
+   LIGHT THEME OVERRIDES FOR LEARN CENTER
+   ======================================================== */
+[data-theme="light"] .learn-page,
+[data-theme="light"] .lesson-page-container {
+  background: #ffffff;
+  color: #111111;
+}
+
+[data-theme="light"] .module-card {
+  background: #ffffff !important;
+  border-color: #e0e0e0 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
+}
+
+[data-theme="light"] .module-card:hover {
+  background: #fcfcfc !important;
+  border-color: #d0d0d0 !important;
+  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="light"] .lesson-markdown-body {
+  color: #555555;
+}
+
+[data-theme="light"] .lesson-h2 {
+  color: #111111;
+  border-bottom-color: #e0e0e0;
+}
+
+[data-theme="light"] .lesson-h3 {
+  color: #111111;
+}
+
+[data-theme="light"] .lesson-h4 {
+  color: #222222;
+}
+
+[data-theme="light"] .lesson-p {
+  color: #555555;
+}
+
+[data-theme="light"] .lesson-text-bold {
+  color: #111111;
+}
+
+[data-theme="light"] .lesson-inline-code {
+  background: #f5f5f5;
+  border-color: #e0e0e0;
+  color: #111111;
+}
+
+[data-theme="light"] .lesson-link {
+  color: #111111;
+}
+
+[data-theme="light"] .lesson-callout {
+  background: #f7f7f7 !important;
+  border-color: #e0e0e0 !important;
+  color: #333333 !important;
+}
+
+[data-theme="light"] .step-nav-btn {
+  background: #ffffff !important;
+  border-color: #e0e0e0 !important;
+}
+
+[data-theme="light"] .step-nav-btn:hover {
+  background: #f7f7f7 !important;
+  border-color: #d0d0d0 !important;
+}
+
+[data-theme="light"] .step-nav-btn.active {
+  background: #ebebeb !important;
+  border-color: #d0d0d0 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="light"] .step-idx {
+  color: #111111 !important;
+  background: #f0f0f0 !important;
+  border-color: #e0e0e0 !important;
+}
+
+[data-theme="light"] .step-title {
+  color: #111111 !important;
+}
+
+[data-theme="light"] .step-desc-preview {
+  color: #777777 !important;
+}
+
+[data-theme="light"] .step-arrow-mark {
+  color: #111111 !important;
+}

@@ -191,8 +191,22 @@ export default function DocsPage() {
 
         <div className="doc-card pinout-presentation-card">
           <div className="pinout-card-header-inner">
-            <h3>ARIES v2.0 Pinout</h3>
-            <p className="pinout-card-subtitle-inner">Complete board pinout and connector mapping.</p>
+            <div className="pinout-header-row">
+              <div>
+                <h3>ARIES v2.0 Pinout Diagram</h3>
+                <p className="pinout-card-subtitle-inner">Official Pinout Diagram PDF &amp; complete connector mapping.</p>
+              </div>
+              <a
+                href="/docs/PINOUT_ARIES_V2.0.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-open-pdf-badge"
+              >
+                <FileText size={14} />
+                <span>Open PDF</span>
+                <ExternalLink size={13} />
+              </a>
+            </div>
           </div>
 
           <div className="pinout-viewport">
@@ -211,6 +225,16 @@ export default function DocsPage() {
               className="btn-view-fullsize-teal"
             >
               <span>View Full Size</span>
+              <ExternalLink size={14} />
+            </a>
+            <a
+              href="/docs/PINOUT_ARIES_V2.0.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-view-pdf-teal"
+            >
+              <FileText size={14} />
+              <span>View PDF</span>
               <ExternalLink size={14} />
             </a>
           </div>
@@ -633,6 +657,37 @@ export default function DocsPage() {
           margin: 0 0 0.35rem 0;
         }
 
+        .pinout-header-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+
+        .btn-open-pdf-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 0.5rem 0.95rem;
+          border-radius: 6px;
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          color: #ffffff;
+          font-family: 'General Sans', sans-serif;
+          font-size: 0.82rem;
+          font-weight: 600;
+          text-decoration: none;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-open-pdf-badge:hover {
+          background: rgba(255, 255, 255, 0.16);
+          border-color: rgba(255, 255, 255, 0.3);
+          color: #ffffff;
+          transform: translateY(-1px);
+        }
+
         .pinout-card-subtitle-inner {
           color: #a1a1aa;
           font-size: 0.88rem;
@@ -661,11 +716,14 @@ export default function DocsPage() {
 
         .pinout-bottom-action {
           display: flex;
+          align-items: center;
           justify-content: center;
+          gap: 12px;
           width: 100%;
           padding-top: 1.25rem;
           border-top: 1px solid rgba(255, 255, 255, 0.08);
           margin-top: 0.5rem;
+          flex-wrap: wrap;
         }
 
         .btn-view-fullsize-teal {
@@ -673,10 +731,10 @@ export default function DocsPage() {
           align-items: center;
           justify-content: center;
           gap: 8px;
-          padding: 0.7rem 2rem;
+          padding: 0.7rem 1.75rem;
           border-radius: 8px;
           background: #ffffff;
-          border: none;
+          border: 1px solid #ffffff;
           color: #000000;
           font-family: 'General Sans', sans-serif;
           font-size: 0.88rem;
@@ -687,8 +745,34 @@ export default function DocsPage() {
 
         .btn-view-fullsize-teal:hover {
           background: #e4e4e7;
+          border-color: #e4e4e7;
           transform: translateY(-2px);
           box-shadow: 0 4px 16px rgba(255, 255, 255, 0.18);
+        }
+
+        .btn-view-pdf-teal {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 0.7rem 1.75rem;
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: #ffffff;
+          font-family: 'General Sans', sans-serif;
+          font-size: 0.88rem;
+          font-weight: 700;
+          text-decoration: none;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-view-pdf-teal:hover {
+          background: rgba(255, 255, 255, 0.16);
+          border-color: rgba(255, 255, 255, 0.35);
+          color: #ffffff;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
         }
 
         /* --------------------------------------------------------

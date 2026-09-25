@@ -873,3 +873,195 @@
     display: none;
   }
 }
+
+/* ========================================================
+   8. LIGHT THEME OVERRIDES FOR SIDEBAR
+======================================================== */
+[data-theme="light"] .sidebar {
+  background: #ffffff;
+  border-right: 1px solid #e0e0e0;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .sidebar-header {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+[data-theme="light"] .brand-icon-box {
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+}
+
+[data-theme="light"] .brand-logo-icon {
+  color: #111111;
+}
+
+[data-theme="light"] .brand-logo-title {
+  color: #111111;
+}
+
+[data-theme="light"] .brand-logo-sub {
+  color: #777777;
+}
+
+[data-theme="light"] .collapse-toggle-btn {
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  color: #555555;
+}
+
+[data-theme="light"] .collapse-toggle-btn:hover {
+  background: #ebebeb;
+  border-color: #d0d0d0;
+  color: #111111;
+}
+
+[data-theme="light"] .sidebar.collapsed .collapse-toggle-btn {
+  background: #f5f5f5;
+  border-color: #e0e0e0;
+  color: #111111;
+}
+
+[data-theme="light"] .sidebar-status-card {
+  background: #f7f7f7;
+  border: 1px solid #e0e0e0;
+}
+
+[data-theme="light"] .sidebar-status-dot-only {
+  background: #f7f7f7;
+  border: 1px solid #e0e0e0;
+}
+
+[data-theme="light"] .status-board-name {
+  color: #111111;
+}
+
+[data-theme="light"] .status-state-label {
+  color: #777777;
+}
+
+[data-theme="light"] .status-frequency-badge {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  color: #555555;
+}
+
+[data-theme="light"] .sidebar-section-title {
+  color: #777777;
+}
+
+[data-theme="light"] .section-divider-line {
+  background: #e0e0e0;
+}
+
+[data-theme="light"] .sidebar-nav-item {
+  color: #555555;
+}
+
+[data-theme="light"] .sidebar-nav-item:hover {
+  color: #111111;
+  background: #f2f2f2;
+  border-color: #e0e0e0;
+}
+
+[data-theme="light"] .sidebar-nav-item.active {
+  color: #111111;
+  background: #ebebeb;
+  border-color: #d0d0d0;
+}
+
+[data-theme="light"] .sidebar.collapsed .sidebar-nav-item:hover {
+  background: transparent;
+  border-color: transparent;
+}
+
+[data-theme="light"] .sidebar.collapsed .sidebar-nav-item.active {
+  background: transparent;
+  border-color: transparent;
+}
+
+[data-theme="light"] .sidebar-active-indicator {
+  background: #111111;
+}
+
+[data-theme="light"] .sidebar-nav-item.active .sidebar-nav-icon,
+[data-theme="light"] .sidebar-nav-item:hover .sidebar-nav-icon {
+  color: #111111;
+}
+
+[data-theme="light"] .sidebar.collapsed .sidebar-nav-item:hover .sidebar-nav-icon {
+  color: #111111;
+}
+
+[data-theme="light"] .sidebar.collapsed .sidebar-nav-item.active .sidebar-nav-icon {
+  color: #111111;
+}
+
+[data-theme="light"] .sidebar-nav-badge {
+  background: #f0f0f0;
+  color: #555555;
+  border: 1px solid #e0e0e0;
+}
+
+[data-theme="light"] .sidebar-nav-item.active .sidebar-nav-badge {
+  background: #ffffff;
+  color: #111111;
+  border-color: #d0d0d0;
+}
+
+[data-theme="light"] .sidebar.collapsed .sidebar-collapsed-tooltip {
+  color: #111111 !important;
+  text-shadow: 0 1px 4px rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="light"] .sidebar-footer {
+  border-top: 1px solid #e0e0e0;
+  background: #ffffff;
+}
+
+[data-theme="light"] .sidebar-footer-theme-btn {
+  border: 1px solid #e0e0e0;
+  color: #555555;
+  background: transparent;
+}
+
+[data-theme="light"] .sidebar-footer-theme-btn:hover {
+  border-color: #d0d0d0;
+  color: #111111;
+  background: #f2f2f2;
+}
+
+[data-theme="light"] .footer-icon-box {
+  color: #555555;
+}
+
+[data-theme="light"] .sidebar.collapsed .sidebar-footer-theme-btn:hover .footer-icon-box {
+  color: #111111;
+}
+
+[data-theme="light"] .sidebar-user-card {
+  border: 1px solid #e0e0e0;
+  color: #555555;
+}
+
+[data-theme="light"] .sidebar-user-card:hover {
+  border-color: #d0d0d0;
+  color: #111111;
+  background: #f2f2f2;
+}
+
+[data-theme="light"] .user-name {
+  color: #111111;
+}
+
+[data-theme="light"] .user-status {
+  color: #777777;
+}
+
+[data-theme="light"] .user-action-icon {
+  color: #777777;
+}
+
+[data-theme="light"] .sidebar.collapsed .sidebar-user-card:hover .user-avatar-box {
+  color: #111111;
+}

@@ -647,6 +647,96 @@ export default function LibraryManagerModal({ isOpen, onClose, helperUrl = 'http
           from { opacity: 0; transform: scale(0.98); }
           to { opacity: 1; transform: scale(1); }
         }
+
+        /* Light Theme Overrides */
+        :global([data-theme="light"]) .lib-modal-overlay {
+          background: rgba(0, 0, 0, 0.4);
+        }
+        :global([data-theme="light"]) .lib-modal-card {
+          background: #ffffff;
+          border-color: #e0e0e0;
+          box-shadow: 0 24px 60px rgba(0, 0, 0, 0.15);
+        }
+        :global([data-theme="light"]) .lib-modal-header {
+          background: #f8f8f8;
+          border-bottom-color: #e0e0e0;
+        }
+        :global([data-theme="light"]) .lib-modal-title {
+          color: #111111;
+        }
+        :global([data-theme="light"]) .lib-modal-close-btn {
+          color: #777777;
+        }
+        :global([data-theme="light"]) .lib-modal-close-btn:hover {
+          background: #e0e0e0;
+          color: #111111;
+        }
+        :global([data-theme="light"]) .lib-search-box {
+          background: #f8f8f8;
+          border-bottom-color: #e0e0e0;
+        }
+        :global([data-theme="light"]) .lib-search-input {
+          background: #ffffff;
+          border-color: #e0e0e0;
+          color: #111111;
+        }
+        :global([data-theme="light"]) .lib-search-input:focus {
+          border-color: #111111;
+        }
+        :global([data-theme="light"]) .lib-card {
+          background: #ffffff;
+          border-color: #e0e0e0;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+        :global([data-theme="light"]) .lib-card:hover {
+          background: #f8f8f8;
+          border-color: #d0d0d0;
+        }
+        :global([data-theme="light"]) .lib-card-name {
+          color: #111111;
+        }
+        :global([data-theme="light"]) .lib-category-badge {
+          background: #f0f0f0;
+          color: #333333;
+          border-color: #e0e0e0;
+        }
+        :global([data-theme="light"]) .lib-card-meta {
+          color: #666666;
+        }
+        :global([data-theme="light"]) .lib-meta-header {
+          background: #f0f0f0;
+          color: #111111;
+        }
+        :global([data-theme="light"]) .lib-card-desc {
+          color: #555555;
+        }
+        :global([data-theme="light"]) .lib-btn-primary {
+          background: #111111;
+          color: #ffffff;
+        }
+        :global([data-theme="light"]) .lib-btn-primary:hover:not(:disabled) {
+          background: #27272a;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        :global([data-theme="light"]) .lib-modal-footer {
+          background: #f8f8f8;
+          border-top-color: #e0e0e0;
+        }
+        :global([data-theme="light"]) .lib-footer-hint {
+          color: #777777;
+        }
+        :global([data-theme="light"]) .lib-footer-hint code {
+          color: #111111;
+        }
+        :global([data-theme="light"]) .lib-btn-close {
+          background: #ffffff;
+          border-color: #e0e0e0;
+          color: #333333;
+        }
+        :global([data-theme="light"]) .lib-btn-close:hover {
+          background: #f0f0f0;
+          color: #111111;
+        }
       `}</style>
     </div>
   );
