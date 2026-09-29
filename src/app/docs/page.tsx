@@ -19,7 +19,9 @@ import {
   Bell,
   Gauge,
   Compass,
-  FileText
+  FileText,
+  Database,
+  Code
 } from 'lucide-react';
 import VegaLabSetupCard from '@/components/ide/VegaLabSetupCard';
 
@@ -251,63 +253,77 @@ export default function DocsPage() {
             <h2>3. FIRMWARE & PROGRAMMING REFERENCE</h2>
           </div>
           <p className="section-subtext">
-            Boot modes, programming methods and firmware details.
+            Boot modes, firmware generation, programming methods and firmware details.
           </p>
+          <div className="section-divider" />
         </div>
 
         <div className="firmware-grid">
           {/* Card 1: Boot Modes */}
           <Link href="/troubleshoot" className="fw-card">
             <div className="fw-icon-box">
-              <Terminal size={18} />
+              <Cpu size={22} strokeWidth={1.7} />
             </div>
             <h4>Boot Modes</h4>
-            <p>Boot configuration and modes</p>
+            <p>Boot configuration and modes.</p>
           </Link>
 
-          {/* Card 2: UART / XMODEM */}
+          {/* Card 2: Build & .bin Generation */}
+          <Link href="/ide" className="fw-card">
+            <div className="fw-icon-box">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <text x="12" y="16.5" textAnchor="middle" fontSize="6.5" fontWeight="bold" fill="currentColor" stroke="none" fontFamily="monospace">.bin</text>
+              </svg>
+            </div>
+            <h4>Build & .bin Generation</h4>
+            <p>Source code to firmware.</p>
+          </Link>
+
+          {/* Card 3: UART / XMODEM */}
           <Link href="/learn/uart-comm" className="fw-card">
             <div className="fw-icon-box">
-              <Upload size={18} />
+              <Upload size={22} strokeWidth={1.7} />
             </div>
             <h4>UART / XMODEM Programming</h4>
-            <p>Firmware transfer via UART0</p>
+            <p>Firmware transfer via UART0.</p>
           </Link>
 
-          {/* Card 3: SPI Flash Programming */}
+          {/* Card 4: SPI Flash Programming */}
           <Link href="/learn/spi-protocol" className="fw-card">
             <div className="fw-icon-box">
-              <HardDrive size={18} />
+              <Database size={22} strokeWidth={1.7} />
             </div>
             <h4>SPI Flash Programming</h4>
-            <p>External SPI flash programming</p>
+            <p>External SPI flash programming.</p>
           </Link>
 
-          {/* Card 4: flasher_min.bin */}
+          {/* Card 5: flasher_min.bin */}
           <Link href="/ide" className="fw-card">
             <div className="fw-icon-box">
-              <FileText size={18} />
+              <FileText size={22} strokeWidth={1.7} />
             </div>
             <h4>flasher_min.bin</h4>
-            <p>Bootloader firmware reference</p>
+            <p>Bootloader firmware reference.</p>
           </Link>
 
-          {/* Card 5: Application .bin */}
+          {/* Card 6: Application .bin */}
           <Link href="/ide" className="fw-card">
             <div className="fw-icon-box">
-              <FileCode size={18} />
+              <Code size={22} strokeWidth={1.7} />
             </div>
             <h4>Application .bin</h4>
-            <p>User application firmware</p>
+            <p>User application firmware.</p>
           </Link>
 
-          {/* Card 6: OTA with ESP32-S3 */}
-          <Link href="/ide" className="fw-card fw-card-highlight">
-            <div className="fw-icon-box fw-icon-ota">
-              <Wifi size={18} />
+          {/* Card 7: OTA with ESP32-S3 */}
+          <Link href="/ide" className="fw-card">
+            <div className="fw-icon-box">
+              <Wifi size={22} strokeWidth={1.7} />
             </div>
             <h4>OTA with ESP32-S3</h4>
-            <p>Wireless firmware flashing in VEGA Studio IDE</p>
+            <p>Wireless firmware flashing in VEGA Studio IDE.</p>
           </Link>
         </div>
       </section>
@@ -370,13 +386,57 @@ export default function DocsPage() {
       </section>
 
       {/* ========================================================
-          4. COMPILER & TOOLCHAIN SETUP SECTION
+          5. USER MANUAL SECTION
       ======================================================== */}
       <section className="doc-section-block">
         <div className="section-title-wrap">
           <div className="section-heading">
             <span className="section-icon-gear">⚙</span>
-            <h2>4. COMPILER & TOOLCHAIN SETUP</h2>
+            <h2>5. USER MANUAL</h2>
+          </div>
+          <p className="section-subtext">
+            Official step-by-step user manual for VEGA EDULINK and VEGA Lab.
+          </p>
+        </div>
+
+        <div className="hardware-grid">
+          {/* Card: VEGA EDULINK User Manual */}
+          <div className="doc-card hardware-card">
+            <div className="card-header-flex">
+              <div className="pdf-icon-badge">
+                <span className="pdf-text">PDF</span>
+              </div>
+              <div className="card-title-group">
+                <h3>VEGA EDULINK User Manual</h3>
+                <p className="card-desc">
+                  Step-by-step user manual for installing VEGA Lab, starting the compiler service, using the VEGA Web IDE, generating the .bin firmware, and setting up OTA programming.
+                </p>
+              </div>
+            </div>
+
+            <div className="card-action-row">
+              <a
+                href="/docs/VEGA_EDULINK_User_Manual.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-open-doc"
+              >
+                <span>View Manual</span>
+                <ExternalLink size={14} />
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================
+          6. COMPILER & TOOLCHAIN SETUP SECTION
+      ======================================================== */}
+      <section className="doc-section-block">
+        <div className="section-title-wrap">
+          <div className="section-heading">
+            <span className="section-icon-gear">⚙</span>
+            <h2>6. COMPILER & TOOLCHAIN SETUP</h2>
           </div>
           <p className="section-subtext">
             Install the portable VEGA RISC-V compiler package once for local compilation.
@@ -778,63 +838,82 @@ export default function DocsPage() {
         /* --------------------------------------------------------
            3. FIRMWARE & PROGRAMMING REFERENCE SECTION
         -------------------------------------------------------- */
+        .section-divider {
+          width: 100%;
+          height: 1px;
+          background: rgba(255, 255, 255, 0.08);
+          margin-top: 1rem;
+          margin-bottom: 0.25rem;
+        }
+
         .firmware-grid {
           display: grid;
-          grid-template-columns: repeat(6, minmax(0, 1fr));
-          gap: 1rem;
+          grid-template-columns: repeat(7, minmax(0, 1fr));
+          gap: 0.75rem;
+          width: 100%;
+          align-items: stretch;
         }
 
         .fw-card {
           background: #0c0c0e;
-          border: 1px solid rgba(255, 255, 255, 0.07);
-          border-radius: 12px;
-          padding: 1.25rem 1rem;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 8px;
+          padding: 1.25rem 0.85rem 1.15rem 0.85rem;
           display: flex;
           flex-direction: column;
           align-items: flex-start;
+          text-align: left;
           text-decoration: none;
           color: inherit;
-          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          box-sizing: border-box;
+          width: 100%;
+          min-width: 0;
+          height: 100%;
         }
 
         .fw-card:hover {
           border-color: rgba(255, 255, 255, 0.25);
-          background: #141418;
-          transform: translateY(-3px);
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
-        }
-
-        .fw-card-highlight {
-          border-color: rgba(255, 255, 255, 0.14);
-          background: #101014;
+          background: #121216;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
         }
 
         .fw-icon-box {
-          color: #d4d4d8;
+          color: #ffffff;
           margin-bottom: 0.85rem;
           display: flex;
           align-items: center;
-          justify-content: center;
-        }
-
-        .fw-icon-ota {
-          color: #ffffff;
+          justify-content: flex-start;
+          height: 28px;
+          width: 28px;
+          flex-shrink: 0;
         }
 
         .fw-card h4 {
-          font-family: 'General Sans', sans-serif;
-          font-size: 0.88rem;
+          font-family: 'General Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+          font-size: 0.82rem;
           font-weight: 700;
           color: #ffffff;
-          margin: 0 0 0.35rem 0;
+          margin: 0 0 0.45rem 0;
           line-height: 1.3;
+          height: 2.7em;
+          min-height: 2.7em;
+          display: flex;
+          align-items: flex-start;
+          text-align: left;
+          word-break: break-word;
+          width: 100%;
         }
 
         .fw-card p {
-          color: #71717a;
-          font-size: 0.74rem;
-          line-height: 1.4;
+          color: #8e8e93;
+          font-size: 0.72rem;
+          line-height: 1.35;
           margin: 0;
+          text-align: left;
+          width: 100%;
+          word-break: break-word;
         }
 
         /* --------------------------------------------------------
@@ -878,9 +957,9 @@ export default function DocsPage() {
         /* --------------------------------------------------------
            RESPONSIVE BREAKPOINTS
         -------------------------------------------------------- */
-        @media (max-width: 1024px) {
+        @media (max-width: 1150px) {
           .firmware-grid {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
           }
           .peripheral-chips-grid {
             grid-template-columns: repeat(4, minmax(0, 1fr));
