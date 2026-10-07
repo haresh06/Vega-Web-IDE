@@ -195,6 +195,8 @@ export default function IDEPage() {
   const [flashTarget, setFlashTarget] = useState<'ota' | 'usb'>('ota');
   const [usbConnected, setUsbConnected] = useState(false);
   const webSerialRef = useRef<WebSerialConnection | null>(null);
+  const serialBufferRef = useRef('');
+  const serialUnsubRef = useRef<(() => void) | null>(null);
 
   // Build & Flash states
   const [buildStatus, setBuildStatus] = useState<BuildStatus>('idle');
@@ -401,6 +403,35 @@ export default function IDEPage() {
   useEffect(scrollTerminal, [buildLog, serialLogs, scrollTerminal]);
 
   const getTime = () => new Date().toLocaleTimeString('en-US', { hour12: false });
+
+  const handleSerialData = useCallback((chunk: string) => {
+    serialBufferRef.current += chunk;
+    const lines = serialBufferRef.current.split(/\r\n|\r|\n/);
+    serialBufferRef.current = lines.pop() || '';
+
+    if (lines.length > 0) {
+      const now = new Date().toLocaleTimeString('en-US', { hour12: false });
+      const newEntries: SerialLog[] = lines.map(line => ({
+        time: now,
+        text: line,
+        type: 'data',
+      }));
+      setSerialLogs(prev => {
+        const next = [...prev, ...newEntries];
+        return next.length > 1000 ? next.slice(next.length - 1000) : next;
+      });
+    }
+  }, []);
+
+  // Cleanup serial listener on IDE unmount
+  useEffect(() => {
+    return () => {
+      if (serialUnsubRef.current) {
+        serialUnsubRef.current();
+        serialUnsubRef.current = null;
+      }
+    };
+  }, []);
 
   const addFlashLog = (msg: string) => {
     setBuildLog(prev => [...prev, `[${getTime()}] ${msg}`]);
@@ -1000,33 +1031,57 @@ export default function IDEPage() {
     }
   };
 
-  const handleSerialConnect = () => {
+  const handleSerialConnect = async () => {
     if (serialConnected) {
+      // Unsubscribe from real serial data stream
+      if (serialUnsubRef.current) {
+        serialUnsubRef.current();
+        serialUnsubRef.current = null;
+      }
       setSerialConnected(false);
-      setSerialLogs(prev => [...prev, { time: getTime(), text: 'Disconnected', type: 'warning' }]);
+      setSerialLogs(prev => [...prev, { time: getTime(), text: 'Serial Monitor Disconnected', type: 'warning' }]);
       return;
     }
-    setSerialConnected(true);
-    setActivePanel('serial');
-    setSerialLogs([
-      { time: getTime(), text: 'Connected at 115200 baud', type: 'info' },
-    ]);
 
-    const messages = [
-      'VEGA SYSTEM STARTED',
-      'UART initialized',
-      'GPIO configured',
-      'LED Blink program running',
-      'LED ON',
-      'LED OFF',
-      'LED ON',
-      'LED OFF',
-    ];
-    messages.forEach((msg, i) => {
-      setTimeout(() => {
-        setSerialLogs(prev => [...prev, { time: getTime(), text: msg, type: i < 4 ? 'info' : 'data' }]);
-      }, (i + 1) * 800);
-    });
+    if (!isWebSerialSupported()) {
+      alert('Serial Monitor requires Chrome, Edge, or an Opera browser with Web Serial API support.');
+      return;
+    }
+
+    try {
+      if (!webSerialRef.current) {
+        webSerialRef.current = new WebSerialConnection();
+      }
+
+      if (!webSerialRef.current.connected) {
+        await webSerialRef.current.requestAndOpen(115200);
+        setUsbConnected(true);
+      }
+
+      // Clean up any previous listener before attaching
+      if (serialUnsubRef.current) {
+        serialUnsubRef.current();
+        serialUnsubRef.current = null;
+      }
+
+      serialBufferRef.current = '';
+      serialUnsubRef.current = webSerialRef.current.onData(handleSerialData);
+
+      setSerialConnected(true);
+      setActivePanel('serial');
+      setSerialLogs(prev => [
+        ...prev,
+        { time: getTime(), text: 'Connected to VEGA Serial (115200 baud)', type: 'info' },
+      ]);
+    } catch (err: unknown) {
+      const error = err as Error;
+      if (error.name !== 'NotFoundError') {
+        setSerialLogs(prev => [
+          ...prev,
+          { time: getTime(), text: `Serial connection error: ${error.message}`, type: 'error' },
+        ]);
+      }
+    }
   };
 
   const handleFileChange = (value: string | undefined) => {

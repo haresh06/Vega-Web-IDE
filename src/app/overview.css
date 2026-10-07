@@ -351,9 +351,21 @@
   object-fit: contain;
   position: relative;
   z-index: 2;
-  filter: contrast(1.04) brightness(1.02);
   user-select: none;
   pointer-events: none;
+}
+
+.board-img-dark {
+  display: block;
+  filter: contrast(1.04) brightness(1.02);
+}
+
+.board-img-light {
+  display: none;
+}
+
+.board-tech-backdrop {
+  display: none;
 }
 
 /* ========================================================
@@ -1159,76 +1171,250 @@
   color: #111111;
 }
 
+[data-theme="light"] .overview-bg-lighting {
+  display: none;
+}
+
 [data-theme="light"] .minimal-header-sticky {
-  background: rgba(255, 255, 255, 0.88);
-  border-bottom: 1px solid #e0e0e0;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #e5e5e5;
 }
 
 [data-theme="light"] .brand-icon-box {
-  background: #f5f5f5;
-  border-color: #e0e0e0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 [data-theme="light"] .brand-icon-dot {
-  background: #111111;
+  background: #000000;
 }
 
 [data-theme="light"] .brand-title-text {
-  color: #111111;
+  color: #000000;
 }
 
 [data-theme="light"] .brand-chip-badge {
-  color: #555555;
-  border-color: #e0e0e0;
-  background: #f5f5f5;
+  color: #52525b;
+  border-color: #e4e4e7;
+  background: #f4f4f5;
 }
 
 [data-theme="light"] .header-nav-item {
-  color: #555555;
+  color: #52525b;
 }
 
 [data-theme="light"] .header-nav-item:hover,
 [data-theme="light"] .header-nav-item.active {
-  color: #111111;
+  color: #000000;
 }
 
 [data-theme="light"] .header-nav-item.active::after {
-  background: #111111;
+  background: #000000;
 }
 
 [data-theme="light"] .header-cta-btn {
-  border-color: #d0d0d0;
-  background: #f5f5f5;
-  color: #111111;
+  border-color: #000000;
+  background: #000000;
+  color: #ffffff;
 }
 
 [data-theme="light"] .header-cta-btn:hover {
-  background: #ebebeb;
-  border-color: #b0b0b0;
+  background: #27272a;
+  border-color: #27272a;
+  transform: translateY(-1px);
+}
+
+[data-theme="light"] .mobile-menu-toggle {
+  border-color: #e4e4e7;
+  color: #000000;
+}
+
+[data-theme="light"] .mobile-drawer-open .header-nav-links {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+/* Hero Section Light Mode */
+[data-theme="light"] .minimal-hero-section {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .hero-eyebrow {
+  color: #71717a;
 }
 
 [data-theme="light"] .headline-primary {
-  color: #111111;
+  color: #000000;
 }
 
 [data-theme="light"] .headline-secondary {
-  color: #777777;
+  color: #52525b;
 }
 
 [data-theme="light"] .hero-supporting-text {
-  color: #555555;
+  color: #52525b;
+}
+
+[data-theme="light"] .btn-primary-orange {
+  border: 1.5px solid #000000;
+  background: #ffffff;
+  color: #000000;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .btn-primary-orange:hover {
+  border-color: #000000;
+  background: #f4f4f5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  color: #000000;
+  transform: translateY(-1px);
 }
 
 [data-theme="light"] .btn-secondary-dark {
-  border-color: #d0d0d0;
+  border: 1.5px solid #000000;
   background: #ffffff;
-  color: #111111;
+  color: #000000;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 [data-theme="light"] .btn-secondary-dark:hover {
-  background: #f5f5f5;
-  border-color: #b0b0b0;
+  background: #f4f4f5;
+  border-color: #000000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  color: #000000;
+  transform: translateY(-1px);
+}
+
+[data-theme="light"] .hero-mouse-flare {
+  display: none !important;
+}
+
+[data-theme="light"] .board-floor-reflection {
+  display: none !important;
+}
+
+[data-theme="light"] .board-studio-stage {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+[data-theme="light"] .board-img-dark {
+  display: none !important;
+}
+
+[data-theme="light"] .board-img-light {
+  display: block !important;
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 20px 32px rgba(0, 0, 0, 0.11)) drop-shadow(0 8px 14px rgba(0, 0, 0, 0.05)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.03));
+}
+
+/* Light Mode Hardware Technical Depth Effect */
+[data-theme="light"] .board-tech-backdrop {
+  display: flex;
+  position: absolute;
+  inset: -30px;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+[data-theme="light"] .board-ambient-halo {
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    rgba(0, 0, 0, 0.035) 0%,
+    rgba(0, 0, 0, 0.012) 45%,
+    transparent 70%
+  );
+  filter: blur(14px);
+}
+
+[data-theme="light"] .board-tech-ring {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+[data-theme="light"] .board-tech-ring.ring-outer {
+  width: 530px;
+  height: 530px;
+  border: 1px dashed rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .board-tech-ring.ring-middle {
+  width: 420px;
+  height: 420px;
+  border: 1px solid rgba(0, 0, 0, 0.045);
+}
+
+[data-theme="light"] .board-tech-ring.ring-inner {
+  width: 290px;
+  height: 290px;
+  border: 1px dotted rgba(0, 0, 0, 0.055);
+}
+
+[data-theme="light"] .board-tech-axis {
+  position: absolute;
+  pointer-events: none;
+}
+
+[data-theme="light"] .board-tech-axis.axis-h {
+  width: 580px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.06) 20%,
+    rgba(0, 0, 0, 0.06) 80%,
+    transparent 100%
+  );
+}
+
+[data-theme="light"] .board-tech-axis.axis-v {
+  height: 580px;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.06) 20%,
+    rgba(0, 0, 0, 0.06) 80%,
+    transparent 100%
+  );
+}
+
+[data-theme="light"] .board-tech-ticks {
+  position: absolute;
+  width: 530px;
+  height: 530px;
+  border-radius: 50%;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(0, 0, 0, 0.14) 1.5px, transparent 1.5px),
+    radial-gradient(circle at 50% 100%, rgba(0, 0, 0, 0.14) 1.5px, transparent 1.5px),
+    radial-gradient(circle at 0% 50%, rgba(0, 0, 0, 0.14) 1.5px, transparent 1.5px),
+    radial-gradient(circle at 100% 50%, rgba(0, 0, 0, 0.14) 1.5px, transparent 1.5px);
+  opacity: 0.7;
+}
+
+[data-theme="light"] .board-shadow-cushion {
+  position: absolute;
+  bottom: 4%;
+  width: 68%;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.11) 0%,
+    rgba(0, 0, 0, 0.035) 50%,
+    transparent 75%
+  );
+  filter: blur(12px);
 }
 
 [data-theme="light"] .minimal-feature-row {

@@ -321,7 +321,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Right Column: VEGA ARIES v2.0 Board Visual on Black Studio Surface */}
+        {/* Right Column: VEGA ARIES v2.0 Board Visual */}
         <div className="hero-visual-col">
           <div
             className="board-studio-stage"
@@ -331,10 +331,30 @@ export default function HomePage() {
             }}
           >
             <div className="board-floor-reflection" />
+
+            {/* Light Mode Technical Backdrop (Concentric technical arcs, crosshair axes & ambient depth) */}
+            <div className="board-tech-backdrop" aria-hidden="true">
+              <div className="board-ambient-halo" />
+              <div className="board-tech-ring ring-outer" />
+              <div className="board-tech-ring ring-middle" />
+              <div className="board-tech-ring ring-inner" />
+              <div className="board-tech-axis axis-h" />
+              <div className="board-tech-axis axis-v" />
+              <div className="board-tech-ticks" />
+              <div className="board-shadow-cushion" />
+            </div>
+
+            {/* Dark Mode: Studio Surface Board Image */}
             <img
               src="/images/vega-aries-board-studio.png"
-              alt="VEGA ARIES v2.0 Hardware Board on Black Studio Surface"
-              className="board-photo-img"
+              alt="VEGA ARIES v2.0 Hardware Board"
+              className="board-photo-img board-img-dark"
+            />
+            {/* Light Mode: Isolated Transparent Hardware Board */}
+            <img
+              src="/images/vega-aries-board.png"
+              alt="VEGA ARIES v2.0 Hardware Board"
+              className="board-photo-img board-img-light"
             />
           </div>
         </div>
