@@ -41,6 +41,8 @@ export function isWebSerialSupported(): boolean {
   return typeof window !== 'undefined' && 'serial' in navigator;
 }
 
+export type SerialDataListener = (data: string) => void;
+
 export class WebSerialConnection {
   private port: SerialPort | null = null;
   private reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
@@ -48,6 +50,8 @@ export class WebSerialConnection {
   private inputBuffer: number[] = [];
   private waiters: Array<() => void> = [];
   private pumpRunning = false;
+  private dataListeners: Set<SerialDataListener> = new Set();
+  private textDecoder: TextDecoder = new TextDecoder('utf-8', { fatal: false });
 
   public get connected(): boolean {
     return this.isConnected;
@@ -55,6 +59,23 @@ export class WebSerialConnection {
 
   public get currentPort(): SerialPort | null {
     return this.port;
+  }
+
+  /**
+   * Subscribe to incoming decoded serial text stream (persistent TextDecoder)
+   */
+  public onData(callback: SerialDataListener): () => void {
+    this.dataListeners.add(callback);
+    return () => {
+      this.removeDataListener(callback);
+    };
+  }
+
+  /**
+   * Remove a previously registered serial data listener
+   */
+  public removeDataListener(callback: SerialDataListener): void {
+    this.dataListeners.delete(callback);
   }
 
   /**
@@ -118,6 +139,19 @@ export class WebSerialConnection {
               this.inputBuffer.push(value[i]);
             }
             this.notifyWaiters();
+
+            if (this.dataListeners.size > 0) {
+              const text = this.textDecoder.decode(value, { stream: true });
+              if (text) {
+                for (const listener of this.dataListeners) {
+                  try {
+                    listener(text);
+                  } catch (err) {
+                    console.error('Error in serial data listener:', err);
+                  }
+                }
+              }
+            }
           }
         }
       } catch (err: unknown) {
